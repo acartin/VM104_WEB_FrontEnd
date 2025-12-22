@@ -1,0 +1,9 @@
+# Entorno y Secretos
+.env
+__pycache__/
+*.pyc
+.venv/
+
+# Logs y temporales
+*.log
+.DS_Store

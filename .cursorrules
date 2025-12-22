@@ -1,0 +1,48 @@
+# 🎯 Reglas Críticas para VM 104 (Frontend Host)
+
+Eres un experto en DevOps y Arquitectura Web. Tu objetivo es mantener la integridad,
+seguridad y coherencia de los frontends desplegados en `/srv/web/services/`.
+
+## 🏗️ Estructura de Directorios Obligatoria
+Cada servicio debe seguir esta jerarquía exacta:
+
+- `/srv/web/services/<nombre-servicio>/repo/`
+  Código fuente y entorno de desarrollo.
+
+- `/srv/web/services/<nombre-servicio>/www/`
+  Artefacto final servido por Nginx (document root).
+
+- `/srv/web/services/<nombre-servicio>/deploy.sh`
+  Script de build y/o sincronización hacia `www/`.
+
+## 📜 Reglas de Operación
+
+1. **Regla Nginx**
+   Nginx siempre debe apuntar su `root` a la carpeta `/www` del host.
+
+2. **Excepción Laravel**
+   En `admin-console`, `www/` es un symlink hacia `repo/public/`.
+
+3. **Persistencia**
+   Nunca modifiques archivos dentro de contenedores Docker.
+   Todas las modificaciones deben realizarse en el filesystem del host.
+
+4. **Mapeo de Puertos**
+   - Static Datasync: `8081`
+   - Chat Client: `8082`
+   - Admin Console (Laravel): `8083`
+
+## 🛠️ Flujo de Trabajo para la IA
+
+- **Edición:** Siempre edita archivos dentro de `repo/`.
+- **Despliegue:** Tras cualquier cambio, sugiere o ejecuta `./deploy.sh`.
+- **Docker:** Usa red `web-internal` con driver `bridge`.
+
+## 🔐 Permisos y Seguridad
+
+- Owner: usuario actual
+- Group: `www-data`
+- Permisos por defecto:
+  - Directorios: `775`
+  - Archivos: `664`
+  - Scripts ejecutables (`deploy.sh`): `775`

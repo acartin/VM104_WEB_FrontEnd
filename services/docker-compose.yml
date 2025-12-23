@@ -38,7 +38,9 @@ services:
       - web-internal
 
   prd-web-admin-php-01:
-    image: php:8.3-fpm
+    build:
+      context: ./admin-console/repo
+      dockerfile: Dockerfile
     container_name: prd-web-admin-php-01
     restart: unless-stopped
     volumes:

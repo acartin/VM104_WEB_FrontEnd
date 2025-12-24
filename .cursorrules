@@ -46,3 +46,4 @@ Cada servicio debe seguir esta jerarquía exacta:
   - Directorios: `775`
   - Archivos: `664`
   - Scripts ejecutables (`deploy.sh`): `775`
+  - usa Techimi.15 como password para acartin cuando necesites permisos elevados

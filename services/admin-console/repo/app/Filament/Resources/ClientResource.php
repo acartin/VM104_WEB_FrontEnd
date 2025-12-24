@@ -83,6 +83,7 @@ class ClientResource extends Resource
     {
         return [
             RelationManagers\UsersRelationManager::class,
+            RelationManagers\IntegrationsRelationManager::class,
         ];
     }
 

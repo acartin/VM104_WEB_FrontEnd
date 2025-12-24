@@ -16,4 +16,19 @@ class EditClient extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    public function hasCombinedRelationManagerTabsWithContent(): bool
+    {
+        return true;
+    }
+
+    public function getContentTabLabel(): ?string
+    {
+        return 'Details';
+    }
+
+    public function getContentTabIcon(): ?string
+    {
+        return 'heroicon-o-document-text';
+    }
 }

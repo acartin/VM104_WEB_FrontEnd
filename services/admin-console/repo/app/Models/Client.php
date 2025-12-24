@@ -28,6 +28,11 @@ class Client extends Model
         return $this->belongsToMany(User::class);
     }
 
+    public function integrations()
+    {
+        return $this->hasMany(Integration::class);
+    }
+
     public function getRouteKeyName()
     {
         return 'slug';

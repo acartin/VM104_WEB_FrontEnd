@@ -11,6 +11,10 @@ class Integration extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $table = 'crm_integrations';
+    public $timestamps = false;
+    public $incrementing = false;
+
     protected $fillable = [
         'client_id',
         'provider',

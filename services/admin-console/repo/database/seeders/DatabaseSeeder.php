@@ -17,19 +17,25 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(RoleSeeder::class);
+
         // Admin User
-        User::factory()->create([
+        $admin = User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@admin.com',
             'password' => Hash::make('password'),
         ]);
+        $admin->assignRole('super_admin');
 
         // Client User
         $cocacolito = User::factory()->create([
             'name' => 'Cocacolito Client',
             'email' => 'cocacolito@admin.com',
             'password' => Hash::make('password'),
+            'job_title' => 'CEO',
+            'available_status' => 'available',
         ]);
+        $cocacolito->assignRole('client_admin');
 
         // Client Tenant
         $client = Client::create([

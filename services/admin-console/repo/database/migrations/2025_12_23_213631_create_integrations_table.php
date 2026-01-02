@@ -1,8 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,16 +10,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('integrations', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignIdFor(\App\Models\Client::class)->constrained()->cascadeOnDelete();
-            $table->string('provider')->index();
-            $table->string('name');
-            $table->text('credentials'); // Will be encrypted by Model
-            $table->boolean('status')->default(true);
-            $table->json('settings')->nullable();
-            $table->timestamps();
-        });
+        DB::statement("
+            CREATE TABLE crm_integrations (
+                id UUID PRIMARY KEY,
+                client_id UUID NOT NULL,
+                provider VARCHAR(255) NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                credentials TEXT NOT NULL,
+                status BOOLEAN DEFAULT TRUE,
+                settings JSONB,
+                created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+                CONSTRAINT crm_integrations_crm_client_id_fkey FOREIGN KEY (client_id) REFERENCES crm_clients(id) ON DELETE CASCADE
+            )
+        ");
+        
+        DB::statement("CREATE INDEX crm_integrations_provider_index ON crm_integrations (provider)");
     }
 
     /**
@@ -28,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('integrations');
+        DB::statement("DROP TABLE IF EXISTS crm_integrations");
     }
 };

@@ -47,3 +47,12 @@ Cada servicio debe seguir esta jerarquía exacta:
   - Archivos: `664`
   - Scripts ejecutables (`deploy.sh`): `775`
   - usa Techimi.15 como password para acartin cuando necesites permisos elevados
+
+### Database & Model Governance (Strict Rules)
+- **Migrations**: Use Laravel migrations ONLY as version control. Always use `DB::statement()` with pure SQL for table creation and modifications to maintain DB logic (Triggers, Constraints) independent of the framework.
+- **Models Configuration**:
+    - Always define `protected $table = 'crm_xxx';` explicitly.
+    - Set `public $timestamps = false;` because Postgres triggers handle them.
+    - Set `public $incrementing = false;` when using UUIDs or external PKs.
+    - Always use the `SoftDeletes` trait for tables with `deleted_at`.
+- **Logic Location**: Business rules, validation constraints, and timestamps must reside in the PostgreSQL layer (Triggers/Check Constraints) whenever possible.

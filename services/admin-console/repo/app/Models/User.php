@@ -21,6 +21,10 @@ class User extends Authenticatable implements HasTenants
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasUuids, HasRoles;
 
+    protected $table = 'crm_users';
+    public $timestamps = false;
+    public $incrementing = false;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -29,6 +33,9 @@ class User extends Authenticatable implements HasTenants
     protected $fillable = [
         'name',
         'email',
+        'job_title',
+        'available_status',
+        'can_receive_leads',
         'password',
     ];
 
@@ -52,12 +59,18 @@ class User extends Authenticatable implements HasTenants
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'can_receive_leads' => 'boolean',
         ];
     }
 
     public function clients()
     {
-        return $this->belongsToMany(Client::class);
+        return $this->belongsToMany(Client::class, 'crm_client_user');
+    }
+
+    public function contactMethods()
+    {
+        return $this->hasMany(ContactMethod::class);
     }
 
     public function getTenants(Panel $panel): Collection

@@ -31,6 +31,8 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('')
             ->colors([
                 'primary' => Color::Indigo,
+                'away' => '#f87171',
+                'offline' => '#b91c1c',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -89,6 +91,6 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->authGuard('admin');
+            ->authGuard('web');
     }
 }

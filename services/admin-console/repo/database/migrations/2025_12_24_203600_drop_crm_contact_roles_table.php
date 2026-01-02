@@ -11,12 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('clients', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name');
-            $table->string('slug')->unique();
-            $table->timestamps();
-        });
+        Schema::dropIfExists('crm_contact_roles');
     }
 
     /**
@@ -24,6 +19,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('clients');
+        Schema::create('crm_contact_roles', function (Blueprint $table) {
+            $table->id();
+            $table->string('name', 50);
+            $table->boolean('can_receive_leads')->default(false);
+            $table->timestamps();
+        });
     }
 };

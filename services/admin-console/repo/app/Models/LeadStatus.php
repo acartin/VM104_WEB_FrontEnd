@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class LeadStatus extends Model
 {
-    protected $table = 'crm_lead_statuses';
+    protected $table = 'lead_statuses';
     public $timestamps = false; // No timestamps in migration
 
     protected $fillable = [

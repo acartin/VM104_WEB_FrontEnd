@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class LeadSource extends Model
 {
-    protected $table = 'crm_lead_sources';
+    protected $table = 'lead_sources';
 
     public $timestamps = false;
 
     protected $fillable = [
         'name',
+        'icon',
         'type',
     ];
 }

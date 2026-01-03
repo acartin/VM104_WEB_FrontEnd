@@ -10,7 +10,7 @@ class Client extends Model
 {
     use HasFactory, HasUuids, \Illuminate\Database\Eloquent\SoftDeletes;
 
-    protected $table = 'crm_clients';
+    protected $table = 'lead_clients';
     public $timestamps = false;
     public $incrementing = false;
 
@@ -26,7 +26,7 @@ class Client extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'crm_client_user');
+        return $this->belongsToMany(User::class, 'lead_client_user');
     }
 
     public function country()

@@ -11,7 +11,7 @@ class Property extends Model
 {
     use HasUuids, SoftDeletes, HasFactory;
 
-    protected $table = 'crm_properties';
+    protected $table = 'lead_properties';
 
     public $timestamps = false;
     public $incrementing = false;
@@ -35,6 +35,8 @@ class Property extends Model
         'price',
         'currency_id',
         'status',
+        'external_ref',
+        'public_url',
     ];
 
     protected $casts = [

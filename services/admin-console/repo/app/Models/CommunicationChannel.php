@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CommunicationChannel extends Model
 {
-    protected $table = 'crm_communication_channels';
+    protected $table = 'lead_communication_channels';
     public $timestamps = false;
 
     protected $fillable = [

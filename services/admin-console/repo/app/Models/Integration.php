@@ -11,7 +11,7 @@ class Integration extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $table = 'crm_integrations';
+    protected $table = 'lead_integrations';
     public $timestamps = false;
     public $incrementing = false;
 

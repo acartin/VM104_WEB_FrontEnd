@@ -38,8 +38,21 @@ class UserResource extends Resource
                     ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                     ->dehydrated(fn ($state) => filled($state))
                     ->required(fn (string $context): bool => $context === 'create'),
+                Forms\Components\TextInput::make('job_title')
+                    ->maxLength(255),
+                Forms\Components\Select::make('available_status')
+                    ->options([
+                        'available' => 'Available',
+                        'busy' => 'Busy',
+                        'away' => 'Away',
+                        'offline' => 'Offline',
+                    ])
+                    ->default('available'),
+                Forms\Components\Toggle::make('can_receive_leads')
+                    ->label('Can Receive Leads')
+                    ->default(true),
                 Forms\Components\Select::make('clients')
-                    ->relationship('clients', 'name', modifyQueryUsing: fn (Builder $query) => $query->select('clients.id', 'clients.name'))
+                    ->relationship('clients', 'name', modifyQueryUsing: fn (Builder $query) => $query->select('lead_clients.id', 'lead_clients.name'))
                     ->multiple()
                     ->preload(),
                 Forms\Components\Select::make('roles')

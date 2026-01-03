@@ -1,19 +1,21 @@
 <div class="flex items-center gap-2 px-4 py-0.5">
     @php
-        $score = $getRecord()->score_total ?? 0;
-        $scoreColor = '#3b82f6'; // Cold (blue-500)
-        $glowClass = '';
+        $record = $getRecord();
+        $score = $record->score_total ?? 0;
+        $priority = $record->priorityDef;
+        $color = $priority?->color ?? 'thermal-none';
         
-        if ($score >= 90) {
-            $scoreColor = '#ef4444'; // Hot (red-500)
-            $glowClass = 'hot-lead-glow';
-        } elseif ($score >= 70) {
-            $scoreColor = '#f59e0b'; // Warm (amber-500)
-        } elseif ($score >= 50) {
-            $scoreColor = '#10b981'; // Qualified (emerald-500)
-        }
+        $hexMap = [
+            'thermal-extreme' => '#ef4444',
+            'thermal-high'    => '#f97316',
+            'thermal-mid'     => '#f59e0b',
+            'thermal-low'     => '#eab308',
+            'thermal-none'    => '#94a3b8',
+        ];
         
+        $scoreColor = $hexMap[$color] ?? '#94a3b8';
         $offset = 88 * (100 - $score) / 100;
+        $glowClass = $color === 'thermal-extreme' ? 'hot-lead-glow' : '';
     @endphp
 
     <div class="relative flex items-center justify-center w-9 h-9 {{ $glowClass }}">
@@ -27,7 +29,7 @@
     </div>
     
     <div class="flex flex-col">
-        <span class="text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight">
+        <span class="text-sm font-semibold text-gray-950 dark:text-white leading-tight">
             {{ $getRecord()->full_name }}
         </span>
     </div>

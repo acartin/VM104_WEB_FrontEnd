@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Currency extends Model
 {
-    protected $table = 'crm_currencies';
+    protected $table = 'lead_currencies';
     public $timestamps = false;
     public $incrementing = false;
     protected $keyType = 'string';

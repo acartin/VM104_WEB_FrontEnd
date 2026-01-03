@@ -45,6 +45,30 @@ class LeadResource extends Resource
                             ->numeric()
                             ->prefix('$'),
                     ])->columns(2),
+                Forms\Components\Section::make('Property Reference')
+                    ->description('Optional: Link this lead to a specific property listing')
+                    ->collapsed()
+                    ->schema([
+                        Forms\Components\TextInput::make('source_property_ref')
+                            ->label('Property Reference ID')
+                            ->helperText('External property ID (e.g., wp-12345, mls-abc-789)')
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('source_property_url')
+                            ->label('Property URL')
+                            ->url()
+                            ->helperText('Direct link to the property listing')
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('estimated_value')
+                            ->label('Estimated Property Value')
+                            ->numeric()
+                            ->prefix('$')
+                            ->helperText('Captured value at lead creation'),
+                        Forms\Components\Textarea::make('property_snapshot')
+                            ->label('Property Snapshot (JSON)')
+                            ->helperText('Additional property details in JSON format')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])->columns(2),
                 Forms\Components\Section::make('Status & source')
                     ->schema([
                         Forms\Components\Select::make('source_id')
@@ -89,11 +113,11 @@ class LeadResource extends Resource
                         'label' => 'Finance',
                     ]),
 
-                Tables\Columns\TextColumn::make('timeline_label')
+                Tables\Columns\TextColumn::make('timelineDef.label')
                     ->label('Timeline')
                     ->alignCenter()
                     ->extraAttributes(fn (Lead $record): array => [
-                        'class' => $record->timeline_color . ' t-badge-base',
+                        'class' => ($record->timelineDef?->color ?? '') . ' t-badge-base',
                     ]),
 
                 Tables\Columns\ViewColumn::make('score_match')

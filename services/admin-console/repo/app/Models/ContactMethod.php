@@ -9,7 +9,7 @@ class ContactMethod extends Model
 {
     use HasUuids;
 
-    protected $table = 'crm_contact_methods';
+    protected $table = 'lead_contact_methods';
     public $timestamps = false;
     public $incrementing = false;
     // User schema said updated_at timestamptz [default: `now()`]

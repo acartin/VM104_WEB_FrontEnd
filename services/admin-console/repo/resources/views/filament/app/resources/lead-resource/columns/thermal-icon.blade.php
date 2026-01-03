@@ -6,21 +6,16 @@
         
         // Obtenemos los metadatos directamente de la base de datos
         // según el tipo de columna
-        $iconName = match($cat) {
-            'engagement' => $record->eng_icon,
-            'finance' => $record->fin_icon,
-            'match' => $record->match_icon,
-            'info' => $record->info_icon,
-            default => 'help-circle'
+        $def = match($cat) {
+            'engagement' => $record->engagementDef,
+            'finance' => $record->financeDef,
+            'match' => $record->matchDef,
+            'info' => $record->infoDef,
+            default => null
         };
 
-        $cssClass = match($cat) {
-            'engagement' => $record->eng_color,
-            'finance' => $record->fin_color,
-            'match' => $record->match_color,
-            'info' => $record->info_color,
-            default => 'thermal-none'
-        };
+        $iconName = $def?->icon ?? 'help-circle';
+        $cssClass = $def?->color ?? 'thermal-none';
     @endphp
 
     <div class="flex items-center justify-center transition-all duration-300 transform hover:scale-125 cursor-pointer {{ $cssClass }}" 

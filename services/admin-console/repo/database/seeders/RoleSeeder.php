@@ -19,7 +19,7 @@ class RoleSeeder extends Seeder
 
         // System Roles (Admin Panel)
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-        $crmAdmin = Role::firstOrCreate(['name' => 'crm_admin', 'guard_name' => 'web']);
+        $leadAdmin = Role::firstOrCreate(['name' => 'lead_admin', 'guard_name' => 'web']);
 
         // Client Roles (App Panel)
         $clientAdmin = Role::firstOrCreate(['name' => 'client_admin', 'guard_name' => 'web']);

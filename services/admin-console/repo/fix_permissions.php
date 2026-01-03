@@ -10,15 +10,11 @@ $options = [
 ];
 
 $combinations = [
+    ['user' => 'acartin', 'pass' => 'Toyota_15'],
+    ['user' => 'acartin', 'pass' => 'Techimi.15'],
     ['user' => 'admin', 'pass' => 'Techimi.15'],
     ['user' => 'admin', 'pass' => 'Toyota_15'],
-    ['user' => 'admin', 'pass' => 'password'],
-    ['user' => 'admin', 'pass' => 'admin'],
     ['user' => 'postgres', 'pass' => 'postgres'],
-    ['user' => 'postgres', 'pass' => 'password'],
-    ['user' => 'postgres', 'pass' => 'example'],
-    ['user' => 'root', 'pass' => 'root'],
-    ['user' => 'root', 'pass' => 'password'],
 ];
 
 foreach ($combinations as $combo) {
@@ -27,13 +23,18 @@ foreach ($combinations as $combo) {
         $pdo = new PDO($dsn, $combo['user'], $combo['pass'], $options);
         echo "Success!\n";
         
-        $pdo->exec("ALTER TABLE crm_leads OWNER TO acartin;");
-        echo "Changed owner of crm_leads to acartin\n";
+        $tables = $pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name LIKE 'lead_%'")->fetchAll(PDO::FETCH_COLUMN);
         
-        $pdo->exec("ALTER TABLE crm_properties OWNER TO acartin;");
-        echo "Changed owner of crm_properties to acartin\n";
+        foreach ($tables as $table) {
+            try {
+                $pdo->exec("ALTER TABLE $table OWNER TO acartin;");
+                echo "Changed owner of $table to acartin\n";
+            } catch (\PDOException $e) {
+                echo "Failed to change owner of $table: " . $e->getMessage() . "\n";
+            }
+        }
         exit; // Done
     } catch (\PDOException $e) {
-        echo "Failed.\n";
+        echo "Connection error: " . $e->getMessage() . "\n";
     }
 }

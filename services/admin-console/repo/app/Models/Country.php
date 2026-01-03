@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Country extends Model
 {
-    protected $table = 'crm_countries';
+    protected $table = 'lead_countries';
     public $timestamps = false;
 
     protected $fillable = [

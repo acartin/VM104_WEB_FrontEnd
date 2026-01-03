@@ -21,7 +21,7 @@ class User extends Authenticatable implements HasTenants
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasUuids, HasRoles;
 
-    protected $table = 'crm_users';
+    protected $table = 'lead_users';
     public $timestamps = false;
     public $incrementing = false;
 
@@ -37,6 +37,8 @@ class User extends Authenticatable implements HasTenants
         'available_status',
         'can_receive_leads',
         'password',
+        'theme',
+        'theme_color',
     ];
 
     /**
@@ -65,7 +67,7 @@ class User extends Authenticatable implements HasTenants
 
     public function clients()
     {
-        return $this->belongsToMany(Client::class, 'crm_client_user');
+        return $this->belongsToMany(Client::class, 'lead_client_user');
     }
 
     public function contactMethods()

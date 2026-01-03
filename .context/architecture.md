@@ -54,3 +54,8 @@ Aislamiento: Red interna de Docker web-internal (driver bridge).
 Propietario: Todos los archivos pertenecen a $USER:www-data.
 
 Visibilidad: Solo los puertos 8081-8083 están expuestos a la red local; el acceso directo a los contenedores está restringido.
+
+### infraestructura
+Docker: prd-web-admin-php-01
+Ambiente: laravel/filament
+Base de datos: credenciales en .env

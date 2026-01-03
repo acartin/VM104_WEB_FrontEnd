@@ -31,6 +31,11 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('')
             ->colors([
                 'primary' => Color::Indigo,
+                'danger' => Color::Red,
+                'gray' => Color::Slate,
+                'info' => Color::Blue,
+                'success' => Color::Green,
+                'warning' => Color::Orange,
                 'away' => '#f87171',
                 'offline' => '#b91c1c',
             ])
@@ -45,36 +50,59 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 'panels::page.start',
-                fn (): string => '<style nonce="'.bin2hex(random_bytes(16)).'">
-                    .fi-header-heading { display: none !important; }
-                    .fi-sidebar-header { display: none !important; }
-                    
-                    /* Light mode only - background and borders */
-                    html:not(.dark) .fi-body {
-                        background-color: #f2f6f9 !important;
+                fn (): string => '', // DISABLED CUSTOM STYLES
+            )
+            ->renderHook(
+                'panels::head.end',
+                function (): string {
+                    try {
+                        $user = auth()->user();
+                        $theme = $user?->theme ?? 'default';
+                        
+                        // If theme is default, DO NOT load the plugin's CSS.
+                        // Let Filament use its native styles (which respect our colors() configuration).
+                        if ($theme === 'default') {
+                            return '';
+                        }
+                        
+                        $cssPath = match($theme) {
+                            'dracula' => 'css/hasnayeen/themes/dracula.css',
+                            'nord' => 'css/hasnayeen/themes/nord.css',
+                            'sunset' => 'css/hasnayeen/themes/sunset.css',
+                            default => '', // Should not happen given the check above
+                        };
+                        
+                        $url = asset($cssPath);
+                        
+                        $script = '';
+                        $isDark = in_array($theme, ['dracula', 'sunset', 'nord']);
+                        
+                        if ($isDark) {
+                            $script = '<script>
+                                document.documentElement.classList.add("dark");
+                                localStorage.setItem("theme", "dark");
+                                new MutationObserver(() => {
+                                    if (!document.documentElement.classList.contains("dark")) {
+                                        document.documentElement.classList.add("dark");
+                                    }
+                                }).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+                            </script>';
+                        } else {
+                            $script = '';
+                        }
+
+                        return "{$script}<link rel=\"stylesheet\" href=\"{$url}\" data-theme=\"{$theme}\" />";
+                    } catch (\Throwable $e) {
+                         return '';
                     }
-                    
-                    html:not(.dark) .fi-sidebar {
-                        border-right-color: #d4d4d4 !important;
-                    }
-                    
-                    html:not(.dark) .fi-section,
-                    html:not(.dark) .fi-ta-ctn,
-                    html:not(.dark) .fi-fo-component-ctn,
-                    html:not(.dark) [class*="border"] {
-                        border-color: #d4d4d4 !important;
-                    }
-                    
-                    /* Active menu item - white background with border */
-                    html:not(.dark) .fi-sidebar-item-button.fi-active,
-                    html:not(.dark) .fi-sidebar-item.fi-active > .fi-sidebar-item-button {
-                        background-color: #ffffff !important;
-                        border: 1px solid #c0c0c0 !important;
-                        border-radius: 0.5rem !important;
-                    }
-                </style>',
+                }
+            )
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn (): string => \Illuminate\Support\Facades\Blade::render('@livewire(\App\Livewire\ThemeSwitcher::class)'),
             )
             ->middleware([
+                \Hasnayeen\Themes\Http\Middleware\SetTheme::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
@@ -87,6 +115,8 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make(),
+                \Hasnayeen\Themes\ThemesPlugin::make()
+                    ->canViewThemesPage(fn () => false),
             ])
             ->authMiddleware([
                 Authenticate::class,

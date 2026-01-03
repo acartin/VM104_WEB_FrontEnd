@@ -37,6 +37,12 @@ class DatabaseSeeder extends Seeder
         ]);
         $cocacolito->assignRole('client_admin');
 
+        // Seed Reference Tables First
+        $this->call([
+            LeadStatusSeeder::class,
+            LeadSourceSeeder::class,
+        ]);
+
         // Client Tenant
         $client = Client::create([
             'name' => 'Coca Cola',
@@ -44,5 +50,9 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $cocacolito->clients()->attach($client);
+        
+        // Seed Intelligence Data (Scores, Leads, Conversations)
+        // This relies on the client existing
+        $this->call(LeadIntelligenceSeeder::class);
     }
 }

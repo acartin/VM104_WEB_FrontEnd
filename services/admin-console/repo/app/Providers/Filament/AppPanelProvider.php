@@ -48,7 +48,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/App/Widgets'), for: 'App\\Filament\\App\\Widgets')
             ->widgets([
-                //
+                \App\Filament\App\Resources\LeadResource\Widgets\LeadStatsOverview::class,
             ])
             ->renderHook(
                 'panels::page.start',

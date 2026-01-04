@@ -9,3 +9,10 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Force uniform width for toggle buttons in filters */
+.fi-fo-toggle-buttons .fi-btn {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+}

@@ -134,7 +134,7 @@
                                         'border-gray-200 dark:border-white/5 bg-white dark:bg-white/5 text-gray-500 hover:border-gray-300 dark:hover:border-white/10' => $record->status_id !== $status->id,
                                     ])
                                 >
-                                    <x-filament::icon :icon="$status->icon" class="w-3.5 h-3.5" />
+                                    <i data-lucide="{{ $status->icon }}" class="w-3.5 h-3.5" x-data x-init="lucide.createIcons({ root: $el })"></i>
                                     {{ $status->name }}
                                 </button>
                             @endforeach
@@ -157,8 +157,9 @@
                         ])>
                             <span class="text-[9px] font-bold uppercase tracking-tighter opacity-70">Recommended follow-up</span>
                             <div class="flex items-center gap-2">
-                                <x-filament::icon 
-                                    :icon="$record->contactPreference->icon" 
+                                <i 
+                                    data-lucide="{{ $record->contactPreference->icon }}"
+                                    x-data x-init="lucide.createIcons({ root: $el })"
                                     @class([
                                         'w-4 h-4',
                                         'text-success-600 dark:text-success-400' => $record->contactPreference->color === 'success',
@@ -168,7 +169,7 @@
                                         'text-primary-600 dark:text-primary-400' => $record->contactPreference->color === 'primary',
                                         'text-gray-500' => $record->contactPreference->color === 'gray',
                                     ])
-                                />
+                                ></i>
                                 <span class="text-xs font-bold dark:text-white">{{ $record->contactPreference->name }}</span>
                             </div>
                         </div>

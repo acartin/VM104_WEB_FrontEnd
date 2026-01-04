@@ -7,6 +7,7 @@ use App\Models\Lead;
 use App\Models\Conversation;
 use App\Models\Client;
 use App\Models\LeadSource;
+use App\Models\ContactPreference;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -347,6 +348,10 @@ class LeadIntelligenceSeeder extends Seeder
             ],
         ];
 
+        $preferenceIds = ContactPreference::pluck('id', 'slug')->toArray();
+        $preferenceSlugs = array_keys($preferenceIds);
+        $newStatusId = DB::table('lead_statuses')->where('key', 'new')->value('id');
+
         foreach ($scenarios as $s) {
             // Eliminar lead si ya existe para evitar duplicados en pruebas
             Lead::where('email', $s['email'])->forceDelete();
@@ -354,7 +359,8 @@ class LeadIntelligenceSeeder extends Seeder
             $lead = Lead::create([
                 'client_id' => $client->id,
                 'source_id' => $s['source_id'],
-                'status_id' => 1, // Nuevo
+                'status_id' => $newStatusId,
+                'contact_preference_id' => $preferenceIds[$preferenceSlugs[array_rand($preferenceSlugs)]] ?? null,
                 'full_name' => $s['name'],
                 'email' => $s['email'],
                 'phone' => $s['phone'],

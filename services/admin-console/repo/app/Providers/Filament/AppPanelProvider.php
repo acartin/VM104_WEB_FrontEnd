@@ -121,14 +121,16 @@ class AppPanelProvider extends PanelProvider
                             'dracula' => 'css/hasnayeen/themes/dracula.css',
                             'nord' => 'css/hasnayeen/themes/nord.css',
                             'sunset' => 'css/hasnayeen/themes/sunset.css',
+                            'forest' => 'css/themes/forest.css',
+                            'datasync' => 'css/themes/datasync.css',
                             default => '',
                         };
                         
-                        $url = asset($cssPath);
+                        $url = asset($cssPath) . '?v=' . time();
                         
                         // Force dark mode class injection script for dark themes
                         $script = '';
-                        $isDark = in_array($theme, ['dracula', 'sunset', 'nord']);
+                        $isDark = in_array($theme, ['dracula', 'sunset', 'nord', 'forest']);
                         
                         if ($isDark) {
                             $script = '<script>
@@ -173,7 +175,7 @@ class AppPanelProvider extends PanelProvider
             ->renderHook(
                 \Filament\View\PanelsRenderHook::GLOBAL_SEARCH_AFTER,
                 fn (): string => \Illuminate\Support\Facades\Blade::render('
-                    <div class="flex items-center">
+                    <div class="flex items-center gap-x-6">
                         @livewire(\App\Livewire\UserStatusSelector::class)
                         @livewire(\App\Livewire\ThemeSwitcher::class)
                     </div>

@@ -69,13 +69,15 @@ class AdminPanelProvider extends PanelProvider
                             'dracula' => 'css/hasnayeen/themes/dracula.css',
                             'nord' => 'css/hasnayeen/themes/nord.css',
                             'sunset' => 'css/hasnayeen/themes/sunset.css',
+                            'forest' => 'css/themes/forest.css',
+                            'datasync' => 'css/themes/datasync.css',
                             default => '', // Should not happen given the check above
                         };
                         
-                        $url = asset($cssPath);
+                        $url = asset($cssPath) . '?v=' . time();
                         
                         $script = '';
-                        $isDark = in_array($theme, ['dracula', 'sunset', 'nord']);
+                        $isDark = in_array($theme, ['dracula', 'sunset', 'nord', 'forest']);
                         
                         if ($isDark) {
                             $script = '<script>

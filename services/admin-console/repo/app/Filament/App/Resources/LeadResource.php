@@ -81,6 +81,11 @@ class LeadResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required(),
+                        Forms\Components\Select::make('contact_preference_id')
+                            ->label('Contact Preference')
+                            ->relationship('contactPreference', 'name')
+                            ->searchable()
+                            ->preload(),
                     ])->columns(2),
             ]);
     }
@@ -137,6 +142,18 @@ class LeadResource extends Resource
                         'type' => 'info',
                         'label' => 'Data Quality',
                     ]),
+
+                Tables\Columns\IconColumn::make('contactPreference.icon')
+                    ->label('Outcome')
+                    ->icon(fn ($state) => $state ?? 'heroicon-o-question-mark-circle')
+                    ->color(fn (Lead $record) => $record->contactPreference?->color ?? 'gray')
+                    ->alignCenter(),
+
+                Tables\Columns\TextColumn::make('leadStatus.name')
+                    ->label('Workflow')
+                    ->badge()
+                    ->color(fn (Lead $record) => $record->leadStatus?->color ?? 'gray')
+                    ->icon(fn (Lead $record) => $record->leadStatus?->icon ?? 'heroicon-o-sparkles'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

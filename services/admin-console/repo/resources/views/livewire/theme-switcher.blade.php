@@ -1,3 +1,3 @@
-<div class="flex items-center ml-4">
+<div class="flex items-center">
     {{ $this->form }}
 </div>

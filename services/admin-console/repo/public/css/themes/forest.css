@@ -1,0 +1,82 @@
+/* Forest Theme for Filament */
+/* Based on Hasnayeen Themes structure but simplified for direct injection */
+
+/* Base Colors - Green Palette */
+:root {
+    --primary-50: 236 253 245;
+    --primary-100: 209 250 229;
+    --primary-200: 167 243 208;
+    --primary-300: 110 231 183;
+    --primary-400: 52 211 153;
+    --primary-500: 16 185 129;  /* Main Brand Color */
+    --primary-600: 5 150 105;
+    --primary-700: 4 120 87;
+    --primary-800: 6 95 70;
+    --primary-900: 6 78 59;
+    --primary-950: 2 44 34;
+}
+
+/* Dark Mode Overrides */
+.dark body {
+    background-color: rgb(2 44 34) !important; /* Very dark green background */
+    color: rgb(236 253 245) !important;
+}
+
+/* Sidebar in Dark Mode */
+.dark .fi-sidebar, 
+.dark .fi-sidebar header {
+    background-color: rgb(6 78 59) !important; /* Darker green for sidebar */
+    border-right-color: rgb(4 120 87) !important;
+}
+
+/* Sidebar Item Hover */
+.dark .fi-sidebar-item:hover,
+.dark .fi-sidebar-item-active {
+    background-color: rgb(4 120 87) !important; 
+}
+
+/* Primary Button Overrides */
+.fi-btn-primary {
+    background-color: rgb(16 185 129) !important;
+    border-color: rgb(16 185 129) !important;
+}
+.fi-btn-primary:hover {
+    background-color: rgb(5 150 105) !important;
+}
+
+/* Typography Overrides (Example of modifying fonts/headers) */
+h1, .fi-header-heading {
+    font-family: 'Courier New', Courier, monospace !important; /* Tech/Forest vibe */
+    letter-spacing: -0.025em;
+    color: rgb(110 231 183) !important; /* Light green text for headers */
+}
+
+/* Card Backgrounds */
+.dark .fi-section, 
+.dark .fi-ta-ctn {
+    background-color: rgb(6 95 70) !important; /* Deep forest card bg */
+    border-color: rgb(4 120 87) !important;
+}
+
+/* Input Fields */
+.dark input, 
+.dark select, 
+.dark textarea {
+    background-color: rgb(2 44 34) !important;
+    border-color: rgb(5 150 105) !important;
+    color: white !important;
+}
+
+/* Topbar */
+.dark .fi-topbar {
+    background-color: rgb(6 78 59) !important;
+    border-bottom-color: rgb(4 120 87) !important;
+}
+
+/* Links */
+a {
+    transition: color 0.2s;
+}
+a:hover {
+    color: rgb(52 211 153) !important;
+}

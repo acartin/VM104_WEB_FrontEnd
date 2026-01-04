@@ -1,0 +1,434 @@
+/* Datasync Theme for Filament */
+/* Inspired by Velzon Dashboard Aesthetics */
+
+/* -------------------------------------------------------------------------- */
+/*                                BASE PALETTE                                */
+/* -------------------------------------------------------------------------- */
+:root {
+    /* Main Brand Color (Indigo/Blue form Sidebar) */
+    --ds-brand-50: 236 242 255;
+    --ds-brand-100: 208 220 255;
+    --ds-brand-500: 65 82 138;
+    /* #41528a - Requested Sidebar Color */
+    --ds-brand-600: 55 68 120;
+    --ds-brand-hover: 60 75 125;
+
+    /* Backgrounds */
+    --ds-bg-light: 243 243 249;
+    /* #f3f3f9 - Lavender Gray */
+    --ds-card-light: 255 255 255;
+
+    --ds-bg-dark: 26 29 33;
+    /* #1a1d21 - Main Section Background (The "Floor") */
+    --ds-card-dark: 33 37 41;
+    /* #212529 - Panels, Cards, Sidebar and Topbar */
+    --ds-input-dark: 26 29 33;
+    /* Inputs match the main bg or slightly deeper */
+
+    /* Text Hierarchy */
+    --ds-text-main-dark: 156 163 175;
+    /* Matches Filament Gray 400 (#9ca3af) */
+    --ds-text-muted-dark: 114 124 140;
+    /* Muted Gray */
+
+    /* Semantic Colors (Badges) */
+    --ds-success: 10 179 156;
+    /* #0ab39c */
+    --ds-warning: 247 184 75;
+    /* #f7b84b */
+    --ds-danger: 240 101 72;
+    /* #f06548 */
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                GLOBAL RESETS                               */
+/* -------------------------------------------------------------------------- */
+
+/* Body Background */
+body {
+    background-color: rgb(var(--ds-bg-light)) !important;
+    color: rgb(var(--ds-text-main-light)) !important;
+    font-family: 'Inter', 'Public Sans', sans-serif, system-ui;
+}
+
+.dark body {
+    background-color: rgb(var(--ds-bg-dark)) !important;
+    color: rgb(var(--ds-text-main-dark)) !important;
+    color-scheme: dark !important;
+    /* Ayuda a los select nativos a verse oscuros */
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                SIDEBAR (Distinctive Feature)               */
+/* -------------------------------------------------------------------------- */
+
+/* Sidebar is ALWAYS Dark Indigo, even in Light Mode */
+.fi-sidebar,
+.fi-sidebar header {
+    background-color: rgb(var(--ds-brand-500)) !important;
+    border-right: none !important;
+}
+
+.dark .fi-sidebar,
+.dark .fi-sidebar header {
+    background-color: rgb(var(--ds-card-dark)) !important;
+    /* Keep #212529 */
+}
+
+/* Sidebar Text - Always White/Light */
+.fi-sidebar-nav .fi-sidebar-item-label {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-weight: 500;
+}
+
+/* Sidebar Icons */
+.fi-sidebar-nav .fi-sidebar-item-icon {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Active State in Sidebar */
+.fi-sidebar-item-active {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    /* Almost white pop */
+    border-radius: 0.375rem !important;
+    /* Rounded corners */
+}
+
+.fi-sidebar-item-active .fi-sidebar-item-label {
+    color: rgb(var(--ds-brand-500)) !important;
+    /* Text becomes Brand Blue */
+    font-weight: 700 !important;
+}
+
+.dark .fi-sidebar-item-active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .fi-sidebar-item-active .fi-sidebar-item-label,
+.dark .fi-sidebar-item-active .fi-sidebar-item-icon {
+    color: #ffffff !important;
+}
+
+.fi-sidebar-item-active .fi-sidebar-item-icon {
+    color: rgb(var(--ds-brand-500)) !important;
+}
+
+/* Hover State - High Specificity Force */
+.fi-sidebar-item:hover:not(.fi-sidebar-item-active),
+.fi-sidebar-item:hover:not(.fi-sidebar-item-active)>a,
+.fi-sidebar-item:hover:not(.fi-sidebar-item-active)>button {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.fi-sidebar-item:hover:not(.fi-sidebar-item-active) .fi-sidebar-item-label,
+.fi-sidebar-item:hover:not(.fi-sidebar-item-active) .fi-sidebar-item-icon,
+.fi-sidebar-item:hover:not(.fi-sidebar-item-active) svg {
+    color: #ffffff !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                TOPBAR & HEADER                             */
+/* -------------------------------------------------------------------------- */
+.fi-topbar {
+    background-color: rgb(var(--ds-card-light)) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.dark .fi-topbar,
+.dark .fi-topbar>nav {
+    background-color: rgb(var(--ds-card-dark)) !important;
+    /* Keep #212529 */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: none !important;
+}
+
+/* Fix for custom selectors in topbar (Status & Theme) */
+.fi-topbar .fi-input-wrp {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    /* Atributo de radio */
+    box-shadow: none !important;
+    transition: border-color 0.2s ease;
+    overflow: hidden !important;
+    /* Esto "orta" cualquier fondo interno que sea cuadrado */
+}
+
+.fi-topbar .fi-input-wrp:focus-within {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Solo el select es transparente, para no romper el fondo de las options */
+.fi-topbar .fi-input-wrp select {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 0.5rem !important;
+    outline: none !important;
+    font-size: 0.85rem !important;
+    cursor: pointer;
+}
+
+/* Forzar que las opciones del select se vean bien en modo oscuro */
+.dark .fi-topbar select option {
+    background-color: #212529 !important;
+    /* Fondo oscuro del card */
+    color: #9ca3af !important;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+.fi-header-heading {
+    color: rgb(var(--ds-text-main-light)) !important;
+    font-weight: 600 !important;
+}
+
+.dark h1,
+.dark h2,
+.dark h3,
+.dark .fi-header-heading {
+    color: rgb(var(--ds-text-main-dark)) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                          INFOLISTS & TYPOGRAPHY                            */
+/* -------------------------------------------------------------------------- */
+
+/* Section Titles (H2) */
+.fi-section-header-heading {
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em;
+    color: rgb(var(--ds-text-main-light)) !important;
+}
+
+.dark .fi-section-header-heading {
+    color: rgb(var(--ds-text-main-dark)) !important;
+}
+
+/* Infolist Entry Labels */
+.fi-in-entry-wrp-label {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    color: rgb(var(--ds-text-muted-light)) !important;
+    margin-bottom: 0.15rem !important;
+}
+
+.dark .fi-in-entry-wrp-label {
+    color: rgb(var(--ds-text-muted-dark)) !important;
+}
+
+/* Infolist Entry Values */
+.fi-in-text {
+    font-size: 0.875rem !important;
+    font-weight: 400 !important;
+    /* Force normal weight for all values */
+    color: rgb(var(--ds-text-main-light)) !important;
+    line-height: 1.5 !important;
+}
+
+.dark .fi-in-text {
+    color: rgb(var(--ds-text-main-dark)) !important;
+    font-weight: 400 !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Special Case: Large Values (if needed via theme) */
+.property-value-large .fi-in-text {
+    font-size: 1.25rem !important;
+    font-weight: 800 !important;
+    color: rgb(var(--ds-brand-500)) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                CARDS & SECTIONS                            */
+/* -------------------------------------------------------------------------- */
+.fi-section,
+.fi-ta-ctn {
+    /* Tables Container */
+    background-color: rgb(var(--ds-card-light)) !important;
+    border-radius: 0.35rem !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+    border: none !important;
+}
+
+.dark .fi-section,
+.dark .fi-ta-ctn {
+    background-color: rgb(var(--ds-card-dark)) !important;
+    /* Keep #212529 */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    /* Subtle border for separation */
+}
+
+/* Ensure the area with search/filters also matches */
+.dark .fi-ta-header,
+.dark .fi-ta-header-ctn {
+    background-color: transparent !important;
+}
+
+/* Ensure footer (pagination) also matches */
+.dark .fi-ta-footer {
+    background-color: transparent !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                TABLES (The Core)                           */
+/* -------------------------------------------------------------------------- */
+
+/* Header Cells - Ultra-Slim Design */
+.fi-ta-header-cell {
+    background-color: rgb(var(--ds-bg-light)) !important;
+    /* Match panel background */
+    color: rgb(var(--ds-text-muted-light)) !important;
+    text-transform: uppercase;
+    font-size: 0.70rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em;
+    padding: 0 !important;
+}
+
+/* Internal control for sort buttons and non-sortable headers */
+.fi-ta-header-cell-action,
+.fi-ta-header-cell-content {
+    padding-top: 0.15rem !important;
+    padding-bottom: 0.15rem !important;
+    min-height: 0 !important;
+    gap: 0.2rem !important;
+}
+
+.fi-ta-header-cell-label {
+    line-height: normal !important;
+}
+
+/* Adjust Sort Icon size just in case */
+.fi-ta-header-cell-sort-icon {
+    width: 0.85rem !important;
+    height: 0.85rem !important;
+}
+
+/* Aggressive fix for Table Header Backgrounds in Dark Mode */
+.dark .fi-ta-table thead,
+.dark .fi-ta-table thead tr,
+.dark .fi-ta-table thead th,
+.dark .fi-ta-header-cell,
+.dark .fi-ta-selection-header-cell,
+.dark .fi-ta-actions-header-cell,
+.dark .fi-ta-empty-state-cell {
+    background-color: rgb(var(--ds-card-dark)) !important;
+    /* Keep #212529 */
+    color: rgb(var(--ds-text-muted-dark)) !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Fix Search Input in Dark Mode */
+.dark .fi-ta-header-ctn input {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Body Cells - Ultra-Compact Design */
+.fi-ta-cell {
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.2rem !important;
+    font-size: 0.85rem !important;
+}
+
+.fi-ta-cell-content {
+    line-height: 1.1 !important;
+}
+
+.fi-ta-row {
+    border-bottom: 1px solid rgba(233, 235, 236, 0.4) !important;
+}
+
+.dark .fi-ta-row {
+    background-color: rgb(var(--ds-card-dark)) !important;
+    /* Keep #212529 */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Remove Zebra Striping if present, we want clean look */
+.fi-ta-row:nth-child(even) {
+    background-color: transparent !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                INPUTS & FORMS                              */
+/* -------------------------------------------------------------------------- */
+input,
+select,
+textarea,
+.fi-select-input {
+    background-color: #fff !important;
+    border-color: #d7d8d9 !important;
+    color: rgb(var(--ds-text-main-light)) !important;
+    border-radius: 0.25rem !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea,
+.dark .fi-select-input {
+    background-color: rgb(var(--ds-input-dark)) !important;
+    /* Darker than card */
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: rgb(var(--ds-text-main-dark)) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: rgb(var(--ds-brand-500)) !important;
+}
+
+/* Labels */
+label,
+.fi-fo-field-wrp-label {
+    color: rgb(var(--ds-text-main-light)) !important;
+    font-weight: 500 !important;
+}
+
+.dark label,
+.dark .fi-fo-field-wrp-label {
+    color: rgb(var(--ds-text-muted-dark)) !important;
+    /* Slightly muted in dark */
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                BUTTONS & BADGES                            */
+/* -------------------------------------------------------------------------- */
+
+/* Primary Button */
+.fi-btn-primary {
+    background-color: rgb(var(--ds-brand-500)) !important;
+    border-color: rgb(var(--ds-brand-500)) !important;
+}
+
+.fi-btn-primary:hover {
+    background-color: rgb(var(--ds-brand-hover)) !important;
+}
+
+/* Badges - Soft Colors Style */
+/* This requires targeting Filament's generated classes broadly or specific semantic classes if available. 
+   Since Filament generates semantic classes (text-success-600), we override specific color vars locally. */
+
+.fi-badge {
+    border-radius: 0.25rem !important;
+}
+
+/* Override Filament's color mappings for this theme context */
+:root {
+    --primary-500: var(--ds-brand-500);
+    --primary-600: var(--ds-brand-600);
+}

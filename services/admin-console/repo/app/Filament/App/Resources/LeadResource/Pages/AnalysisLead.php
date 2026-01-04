@@ -53,14 +53,8 @@ use Filament\Infolists\Components\Group;
                                             ->money('USD')
                                             ->icon('heroicon-m-home')
                                             ->iconColor('primary')
-                                            ->weight('bold')
-                                            ->size('lg')
                                             ->columnSpanFull()
-                                            ->visible(fn ($record) => $record->estimated_value > 0)
-                                            ->extraAttributes([
-                                                'title' => 'Estimated Property Value',
-                                                'class' => 'property-value-large',
-                                            ]),
+                                            ->visible(fn ($record) => $record->estimated_value > 0),
                                         
                                         // Header Row: Gauge + Big Number
                                         ViewEntry::make('score_gauge')
@@ -75,44 +69,34 @@ use Filament\Infolists\Components\Group;
                                                     ->label('')
                                                     ->icon('heroicon-m-user')
                                                     ->iconColor('gray')
-                                                    ->weight('bold')
-                                                    ->columnSpanFull()
-                                                    ->extraAttributes(['title' => 'Full Name']),
+                                                    ->columnSpanFull(),
                                                 
                                                 TextEntry::make('email')
                                                     ->label('')
                                                     ->icon('heroicon-m-envelope')
                                                     ->iconColor('gray')
-                                                    ->size('sm')
                                                     ->copyable()
-                                                    ->columnSpanFull()
-                                                    ->extraAttributes(['title' => 'Email Address']),
+                                                    ->columnSpanFull(),
                                                 
                                                 TextEntry::make('phone')
                                                     ->label('')
                                                     ->icon('heroicon-m-phone')
                                                     ->iconColor('gray')
-                                                    ->size('sm')
-                                                    ->columnSpanFull()
-                                                    ->extraAttributes(['title' => 'Phone Number']),
+                                                    ->columnSpanFull(),
 
                                                 TextEntry::make('declared_income')
                                                     ->label('')
                                                     ->money('USD')
                                                     ->icon('heroicon-m-banknotes')
                                                     ->iconColor('success')
-                                                    ->weight('medium')
-                                                    ->columnSpanFull()
-                                                    ->extraAttributes(['title' => 'Declared Annual Income']),
+                                                    ->columnSpanFull(),
                                                 
                                                 TextEntry::make('current_debts')
                                                     ->label('')
                                                     ->money('USD')
                                                     ->icon('heroicon-m-credit-card')
                                                     ->iconColor('danger')
-                                                    ->weight('medium')
-                                                    ->columnSpanFull()
-                                                    ->extraAttributes(['title' => 'Current Total Debts']),
+                                                    ->columnSpanFull(),
                                                 
 
                                             ]),
@@ -155,7 +139,6 @@ use Filament\Infolists\Components\Group;
                                         TextEntry::make('ai_summary')
                                             ->label('')
                                             ->getStateUsing(fn ($record) => $record->conversations()->latest('last_message_at')->first()?->summary)
-                                            ->prose()
                                             ->placeholder('Esperando resumen de la conversación del Bot...'),
                                     ])
                                     ->compact(),
@@ -164,13 +147,13 @@ use Filament\Infolists\Components\Group;
                                 Section::make('Atribución de Marketing')
                                     ->icon('heroicon-m-megaphone')
                                     ->compact()
+                                    ->inlineLabel()
                                     ->schema([
-                                        Grid::make(2)
+                                        Grid::make(1)
                                             ->schema([
                                                 ViewEntry::make('source.name')
                                                     ->label('Canal de Captación')
-                                                    ->view('filament.app.resources.lead-resource.infolists.result-source-lucide')
-                                                    ->columnSpan(1),
+                                                    ->view('filament.app.resources.lead-resource.infolists.result-source-lucide'),
 
                                                 TextEntry::make('utm_source')
                                                     ->label('UTM Source')
@@ -182,17 +165,14 @@ use Filament\Infolists\Components\Group;
 
                                                 TextEntry::make('utm_campaign')
                                                     ->label('Campaña')
-                                                    ->weight('bold')
                                                     ->placeholder('-'),
 
                                                 TextEntry::make('utm_content')
                                                     ->label('Contenido / Anuncio')
-                                                    ->size('sm')
                                                     ->placeholder('-'),
 
                                                 TextEntry::make('click_id')
                                                     ->label('ID de Click')
-                                                    ->size('xs')
                                                     ->fontFamily('mono')
                                                     ->copyable()
                                                     ->placeholder('-'),
@@ -203,33 +183,41 @@ use Filament\Infolists\Components\Group;
                                 Section::make('Propiedad de Interés')
                                     ->icon('heroicon-m-home-modern')
                                     ->compact()
-                                    ->schema([
-                                        TextEntry::make('source_property_url')
-                                            ->label('URL de Origen')
-                                            ->url(fn ($state) => $state, true)
-                                            ->color('primary')
-                                            ->size('sm')
-                                            ->placeholder('URL no disponible'),
+                                    ->inlineLabel()
+                                    ->schema(function (Lead $record) {
+                                        // Start with the standard URL field
+                                        $entries = [
+                                            TextEntry::make('source_property_url')
+                                                ->label('URL de Origen')
+                                                ->url(fn ($state) => $state, true)
+                                                ->color('primary')
+                                                ->placeholder('URL no disponible'),
+                                        ];
 
-                                        TextEntry::make('property_snapshot.title')
-                                            ->label('Título de la Propiedad')
-                                            ->columnSpanFull()
-                                            ->weight('bold')
-                                            ->placeholder('-'),
+                                        $snapshot = $record->property_snapshot ?? [];
 
-                                        Grid::make(3)
-                                            ->schema([
-                                                TextEntry::make('property_snapshot.bedrooms')
-                                                    ->label('Habitaciones')
-                                                    ->placeholder('-'),
-                                                TextEntry::make('property_snapshot.bathrooms')
-                                                    ->label('Baños')
-                                                    ->placeholder('-'),
-                                                TextEntry::make('property_snapshot.area_sqm')
-                                                    ->label('Área (m²)')
-                                                    ->placeholder('-'),
-                                            ]),
-                                    ])
+                                        // Map specific keys to better labels, or use Title Case by default
+                                        foreach ($snapshot as $key => $value) {
+                                            if (is_null($value) || $value === '') continue;
+
+                                            $label = match ($key) {
+                                                'title' => 'Título de la Propiedad',
+                                                'bedrooms' => 'Habitaciones',
+                                                'bathrooms' => 'Baños',
+                                                'area_sqm' => 'Área (m²)',
+                                                'price' => 'Precio Referencial',
+                                                'floors' => 'Pisos / Niveles',
+                                                'parking' => 'Estacionamientos',
+                                                default => str($key)->replace(['_', '-'], ' ')->title()
+                                            };
+
+                                            $entries[] = TextEntry::make("property_snapshot.{$key}")
+                                                ->label($label)
+                                                ->placeholder('-');
+                                        }
+
+                                        return $entries;
+                                    })
                                     ->visible(fn ($record) => $record->source_property_ref || $record->source_property_url),
 
                                 // 4. Recent Conversation Snippet
@@ -242,7 +230,6 @@ use Filament\Infolists\Components\Group;
                                             ->getStateUsing(fn ($record) => $record->conversations()->latest('last_message_at')->first()?->getLastMessage()['text'])
                                             ->icon('heroicon-m-chat-bubble-bottom-center-text')
                                             ->iconColor('gray')
-                                            ->prose()
                                             ->placeholder('Sin mensajes recientes'),
                                         
                                         TextEntry::make('last_interaction')
@@ -252,8 +239,6 @@ use Filament\Infolists\Components\Group;
                                                 if (!$lastConv) return null;
                                                 return "Última interacción: " . $lastConv->last_message_at->diffForHumans();
                                             })
-                                            ->size('xs')
-                                            ->color('gray')
                                             ->visible(fn ($record) => $record->conversations()->exists()),
                                     ]),
                             ])

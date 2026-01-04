@@ -81,9 +81,9 @@
             <div class="flex items-center gap-3 flex-1 min-w-0">
                 <!-- Data Row: Meaning and Score -->
                 <div class="flex items-center justify-between flex-1">
-                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight truncate max-w-[70%]">
+                    <div class="fi-in-text">
                         {{ $stat['value'] }}
-                    </span>
+                    </div>
                     <span class="text-lg font-black {{ $stat['color'] }} flex-shrink-0">
                         {{ $stat['score'] }}
                     </span>

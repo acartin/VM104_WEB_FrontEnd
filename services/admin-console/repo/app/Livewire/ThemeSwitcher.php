@@ -33,6 +33,8 @@ class ThemeSwitcher extends Component implements HasForms
                         'dracula' => 'Dracula',
                         'nord' => 'Nord',
                         'sunset' => 'Sunset',
+                        'forest' => 'Forest (Green)',
+                        'datasync' => 'Datasync (Velzon)',
                     ])
                     ->selectablePlaceholder(false)
                     ->live()

@@ -19,6 +19,7 @@ class Lead extends Model
         'client_id',
         'source_id',
         'origin_channel_id',
+        'contact_preference_id',
         'assigned_user_id',
         'full_name',
         'email',
@@ -70,6 +71,8 @@ class Lead extends Model
         'score_total' => 'integer',
         'estimated_value' => 'decimal:2',
         'property_snapshot' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function client()
@@ -90,6 +93,11 @@ class Lead extends Model
     public function leadStatus()
     {
         return $this->belongsTo(LeadStatus::class, 'status_id');
+    }
+
+    public function contactPreference()
+    {
+        return $this->belongsTo(ContactPreference::class, 'contact_preference_id');
     }
 
     // RELACIONES DE SCORING (MOTOR)

@@ -29,7 +29,7 @@
     </div>
     
     <div class="flex flex-col">
-        <span class="text-sm font-semibold text-gray-950 dark:text-white leading-tight">
+        <span class="text-sm font-normal text-gray-950 dark:text-white leading-tight">
             {{ $getRecord()->full_name }}
         </span>
     </div>

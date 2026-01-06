@@ -41,6 +41,11 @@ class Client extends Model
 
     // Relationship removed as Contact model was consolidated into User
 
+    public function leadKnowledgeDocuments()
+    {
+        return $this->hasMany(LeadKnowledgeDocument::class);
+    }
+
     public function getRouteKeyName()
     {
         return 'slug';

@@ -432,3 +432,54 @@ label,
     --primary-500: var(--ds-brand-500);
     --primary-600: var(--ds-brand-600);
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                BUTTONS FIXES                               */
+/* -------------------------------------------------------------------------- */
+
+/* Standardize Primary Buttons (Create, Save, etc) */
+.fi-btn-color-primary,
+button[type="submit"].fi-btn {
+    background-color: rgb(var(--ds-brand-500)) !important;
+    color: #ffffff !important;
+    border: 1px solid rgb(var(--ds-brand-500)) !important;
+    transition: all 0.2s ease;
+}
+
+.fi-btn-color-primary:hover,
+button[type="submit"].fi-btn:hover {
+    background-color: rgb(var(--ds-brand-hover)) !important;
+    border-color: rgb(var(--ds-brand-hover)) !important;
+}
+
+/* Fix "Create & Create Another" and other grouped actions */
+/* These often behave as 'secondary' or 'gray' buttons in some contexts, forcing them to primary look */
+.fi-ac-btn-action.fi-btn-color-primary,
+.fi-ac-grouped-action-item {
+    background-color: rgb(var(--ds-brand-500)) !important;
+    color: #ffffff !important;
+}
+
+/* Fix for Dark Mode specific button visibility */
+.dark .fi-btn-color-primary,
+.dark .fi-btn-color-gray,
+.dark .fi-ac-grouped-action-item {
+     /* Ensure it pops from the dark background (#1a1d21 vs button) */
+    opacity: 1 !important;
+}
+
+/* Target the specific "Create & create another" secondary button if it's rendering as gray */
+.fi-btn-color-gray {
+    background-color: rgba(255, 255, 255, 0.05) !important; /* Subtle gray for secondary */
+    color: rgb(var(--ds-text-main-light)) !important;
+    border: 1px solid transparent !important;
+}
+
+.dark .fi-btn-color-gray {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e5e7eb !important;
+}
+
+.fi-btn-color-gray:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}

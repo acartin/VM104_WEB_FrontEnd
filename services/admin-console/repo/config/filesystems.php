@@ -36,6 +36,16 @@ return [
             'serve' => true,
             'throw' => false,
             'report' => false,
+            'permissions' => [
+                'file' => [
+                    'public' => 0777,
+                    'private' => 0777,
+                ],
+                'dir' => [
+                    'public' => 0777,
+                    'private' => 0777,
+                ],
+            ],
         ],
 
         'public' => [

@@ -1,0 +1,182 @@
+<!-- 
+=================================================================
+HOMMIE CHATBOT - INTEGRACIÓN SIMPLE CON IFRAME
+=================================================================
+INSTRUCCIONES:
+1. Copia este código completo
+2. En WordPress, ve a: Apariencia > Editor de Temas > footer.php
+   O usa el plugin "Insert Headers and Footers" (Footer section)
+3. Pega este código antes del </body>
+4. Cambia TEST123 por tu client_id real
+5. Guarda los cambios
+=================================================================
+-->
+
+<style>
+    #hommie-chatbot-iframe-wrapper {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 400px;
+        height: 600px;
+        z-index: 999999;
+        box-shadow: 0 5px 40px rgba(0, 0, 0, 0.16);
+        border-radius: 15px;
+        overflow: hidden;
+        background: white;
+    }
+
+    #hommie-chatbot-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+    }
+
+    #hommie-chatbot-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        z-index: 999999;
+        transition: all 0.3s ease;
+    }
+
+    #hommie-chatbot-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    }
+
+    #hommie-chatbot-toggle svg {
+        width: 28px;
+        height: 28px;
+        fill: white;
+    }
+
+    #hommie-chatbot-iframe-wrapper.hidden {
+        display: none;
+    }
+
+    #hommie-chatbot-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #ff4757;
+        border: 2px solid white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000000;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    #hommie-chatbot-close:hover {
+        background: #ff3838;
+        transform: scale(1.1);
+    }
+
+    #hommie-chatbot-close svg {
+        width: 20px;
+        height: 20px;
+        fill: white;
+    }
+
+    /* Responsive para móviles */
+    @media (max-width: 768px) {
+        #hommie-chatbot-iframe-wrapper {
+            bottom: 0;
+            right: 0;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            border-radius: 0;
+        }
+
+        #hommie-chatbot-toggle {
+            bottom: 15px;
+            right: 15px;
+            width: 55px;
+            height: 55px;
+        }
+    }
+</style>
+
+<!-- Botón flotante para abrir/cerrar el chat -->
+<button id="hommie-chatbot-toggle" onclick="toggleHommieChat()">
+    <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24">
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+    </svg>
+</button>
+
+<!-- Contenedor del iframe -->
+<div id="hommie-chatbot-iframe-wrapper" class="hidden">
+    <button id="hommie-chatbot-close" onclick="toggleHommieChat()" title="Cerrar chat">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24">
+            <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+        </svg>
+    </button>
+    <iframe id="hommie-chatbot-iframe" src="https://bot.datasyncsa.com/widget.html?client_id=TEST123"
+        allow="microphone; camera" loading="lazy">
+    </iframe>
+</div>
+
+<script>
+    function toggleHommieChat() {
+        const wrapper = document.getElementById('hommie-chatbot-iframe-wrapper');
+        const button = document.getElementById('hommie-chatbot-toggle');
+
+        if (wrapper.classList.contains('hidden')) {
+            wrapper.classList.remove('hidden');
+            button.style.display = 'none';
+        } else {
+            wrapper.classList.add('hidden');
+            button.style.display = 'flex';
+        }
+    }
+
+    // Cerrar con tecla ESC
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            const wrapper = document.getElementById('hommie-chatbot-iframe-wrapper');
+            const button = document.getElementById('hommie-chatbot-toggle');
+            if (!wrapper.classList.contains('hidden')) {
+                wrapper.classList.add('hidden');
+                button.style.display = 'flex';
+            }
+        }
+    });
+</script>
+
+<!-- 
+=================================================================
+💡 PERSONALIZACIÓN
+=================================================================
+Para cambiar el client_id, modifica esta línea:
+src="https://bot.datasyncsa.com/widget.html?client_id=TEST123"
+
+Por ejemplo:
+src="https://bot.datasyncsa.com/widget.html?client_id=CLIENTE-WORDPRESS-001"
+
+También puedes cambiar:
+- Posición: Cambia "right: 20px" a "left: 20px"
+- Tamaño: Cambia "width: 400px; height: 600px"
+- Colores: Cambia el "background: linear-gradient(...)"
+=================================================================
+-->

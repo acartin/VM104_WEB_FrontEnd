@@ -227,7 +227,7 @@ use Filament\Infolists\Components\Group;
                                     ->schema([
                                         TextEntry::make('last_message_preview')
                                             ->label('')
-                                            ->getStateUsing(fn ($record) => $record->conversations()->latest('last_message_at')->first()?->getLastMessage()['text'])
+                                            ->getStateUsing(fn ($record) => data_get($record->conversations()->latest('last_message_at')->first()?->getLastMessage(), 'text'))
                                             ->icon('heroicon-m-chat-bubble-bottom-center-text')
                                             ->iconColor('gray')
                                             ->placeholder('Sin mensajes recientes'),

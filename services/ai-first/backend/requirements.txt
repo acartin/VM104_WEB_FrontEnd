@@ -1,0 +1,12 @@
+fastapi[all]
+uvicorn
+pydantic[email]>=2.0
+pydantic-settings
+asyncpg
+psycopg2-binary
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+httpx
+python-dotenv
+taskiq[redis]

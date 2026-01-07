@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg"
+    data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="default">
+
+<head>
+    <meta charset="utf-8" />
+    <title>AI First - Web Interface</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="AI First Operational Dashboard" name="description" />
+    <link rel="shortcut icon" href="themes/images/favicon.ico">
+
+    <!-- Layout config Js -->
+    <!-- Bootstrap Css (Local) -->
+    <link href="themes/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <!-- Icons Css (Local) -->
+    <link href="themes/css/icons.min.css" rel="stylesheet" type="text/css" />
+    <!-- App Css (Velzon Official) -->
+    <link href="themes/css/app.min.css" rel="stylesheet" type="text/css" />
+    <!-- custom Css (Velzon Official) -->
+    <link href="themes/css/custom.min.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <div id="layout-wrapper">
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="page-content">
+                <div class="container-fluid" id="app-root">
+                    <!-- Dynamic Content will be rendered here -->
+                    <div class="text-center mt-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Initializing AI-First Interface...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Renderer -->
+    <script type="module" src="renderer/main.js?v=2"></script>
+</body>
+
+</html>

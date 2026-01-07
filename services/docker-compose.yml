@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+  # --- SERVICIOS EXISTENTES ---
   prd-web-static-datasyncsa-01:
     image: nginx:alpine
     container_name: prd-web-static-datasyncsa-01
@@ -44,9 +45,42 @@ services:
       dockerfile: Dockerfile
     container_name: prd-web-admin-php-01
     restart: unless-stopped
+    user: "${CURRENT_UID}:${CURRENT_GID}"
     volumes:
       - /srv/web/services/admin-console/repo:/var/www
       - /srv/web/services/admin-console/.env:/var/www/.env
+    networks:
+      - web-internal
+
+  # --- NUEVOS SERVICIOS AIFIRST ---
+
+  prd-web-aifirst-api-01:
+    build:
+      context: ./ai-first/backend
+      dockerfile: Dockerfile
+    container_name: prd-web-aifirst-api-01
+    restart: unless-stopped
+    user: "${CURRENT_UID}:${CURRENT_GID}"
+    # AGREGAR ESTA LÍNEA:
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload 
+    ports:
+      - "8084:8000"
+    volumes:
+      - /srv/web/services/ai-first/backend:/app
+    working_dir: /app
+    env_file:
+      - ./ai-first/.env
+    networks:
+      - web-internal
+
+  prd-web-aifirst-static-01:
+    image: nginx:alpine
+    container_name: prd-web-aifirst-static-01
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    volumes:
+      - /srv/web/services/ai-first/frontend:/usr/share/nginx/html:ro
     networks:
       - web-internal
 

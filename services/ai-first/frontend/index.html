@@ -18,6 +18,16 @@
     <link href="themes/css/app.min.css" rel="stylesheet" type="text/css" />
     <!-- custom Css (Velzon Official) -->
     <link href="themes/css/custom.min.css" rel="stylesheet" type="text/css" />
+    <!-- Custom Styles for Switches -->
+    <style>
+        /* Force Red Background when switch is unchecked and has form-switch-danger class */
+        .form-switch.form-switch-danger .form-check-input:not(:checked) {
+            background-color: #f06548;
+            /* Velzon Danger Color */
+            border-color: #f06548;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+        }
+    </style>
 </head>
 
 <body>
@@ -38,8 +48,16 @@
         </div>
     </div>
 
+    <!-- JAVASCRIPT -->
+    <script src="themes/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Sweet Alert css-->
+    <link href="themes/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
     <!-- Core Renderer -->
-    <script type="module" src="renderer/main.js?v=2"></script>
+    <script src="themes/libs/sweetalert2/sweetalert2.min.js"></script>
+    <script src="config.js"></script>
+    <script type="module" src="renderer/main.js?v=23"></script>
 </body>
 
 </html>

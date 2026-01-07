@@ -15,9 +15,11 @@ async def app_init():
             "items": [
                 {"id": "dash", "label": "Dashboard", "icon": "ri-dashboard-2-line", "link": "/dashboard"},
                 {"id": "clients", "label": "Clientes", "icon": "ri-user-line", "link": "/clients"},
+                {"id": "prompts", "label": "AI Prompts", "icon": "ri-robot-line", "link": "/prompts"},
                 {"id": "sys", "label": "Sistema", "icon": "ri-settings-line", "subItems": [
                     {"id": "users", "label": "Usuarios", "link": "/users"},
-                    {"id": "roles", "label": "Roles", "link": "/roles"}
+                    {"id": "roles", "label": "Roles", "link": "/roles"},
+                    {"id": "countries", "label": "Países", "link": "/countries"}
                 ]}
             ]
         },

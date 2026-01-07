@@ -4,9 +4,7 @@
 
 ANTES DE EMPEZAR, DEBES LEER Y COMPRENDER:
 1. .cursorrules (Tus reglas de comportamiento y prohibiciones).
-2. ai_context/full_specs.md (La teoría de los 14 capítulos).
-3. ai_context/visual_dictionary.json (Tus únicos pinceles: colores y clases).
-4. ai_context/catalog_context.json (Tu inventario de componentes permitidos).
+2. todos los archivos en ai_context.
 
 REGLAS DE ORO PARA TUS RESPUESTAS:
 - No uses ORMs. Si necesitas datos, escribe SQL explícito en la carpeta /dal/.

@@ -98,3 +98,55 @@ Global middleware (CORS, Logging) belongs in `main.py`. Feature-specific middlew
 *   **Speed**: Deploy standard, battle-tested auth in minutes.
 *   **Security**: Zero compromise from trying to fit into legacy structures.
 *   **Maintenance**: 100% Pythonic standard.
+
+## 7. Generic CRUD (SDUI Protocol)
+To avoid writing repetitive Javascript for every module, we follow a strict **Metadata-Driven** approach.
+
+### 7.1 Backend Responsibility
+The Router must return not just data, but the **Form Schema**:
+```python
+"form_schema": [
+    {"name": "name", "label": "Full Name", "type": "text", "required": True},
+    {"name": "role", "label": "Role", "type": "badge", "required": False}
+]
+```
+
+### 7.2 Frontend Responsibility
+1.  **Hydration**: `main.js` reads `data-schema` from the Grid DOM during hydration.
+2.  **Generic Modals**: `openGenericModal(schema)` renders the form on-the-fly.
+3.  **Generic Actions**: Buttons use `onclick="window.handleGenericAction(this)"`.
+
+### 7.3 Dual-Layer Validation Strategy
+To ensure both UX and Security, we implement validation in two synchronized layers:
+
+1.  **Likely UX (Frontend - SDUI)**:
+    *   Defined in `router.py` within `form_schema`.
+    *   Attributes: `min_length`, `max_length`, `pattern`.
+    *   **Goal**: Prevent user frustration via browser-native enforcement.
+
+    ```python
+    {"name": "iso", "type": "text", "min_length": 2, "max_length": 3}
+    ```
+
+2.  **Strict Security (Backend - Pydantic)**:
+    *   Defined in `schemas.py`.
+    *   **Goal**: Ensure data integrity and prevent attacks.
+    *   **CRITICAL**: Must match or be stricter than SDUI rules.
+
+    ```python
+    iso: str = Field(..., min_length=2, max_length=3)
+    ```
+
+**Handling Errors**: The Frontend (`main.js`) is programmed to catch `422 Unprocessable Entity` responses and display specific field errors in the SweetAlert modal.
+
+## 8. Configuration Management
+Due to browser security protocols, the Frontend **cannot** directly access server-side environment variables (`.env`).
+
+### 8.1 Strategy: Decoupled Configuration
+We use a **Decoupled Strategy** to manage configuration:
+1.  **Backend**: Reads directly from `.env` using `python-dotenv`.
+2.  **Frontend**: Reads from `frontend/config.js`, which exposes a global `window.AppConfig` object.
+
+### 8.2 Maintenance
+**Manual Sync Required**: If you change `API_BASE_URL` in `.env`, you **MUST** update `frontend/config.js` to match.
+*   *Future Optimization*: This can be automated via CI/CD pipelines or Docker entrypoints that generate `config.js` at runtime based on environment variables.

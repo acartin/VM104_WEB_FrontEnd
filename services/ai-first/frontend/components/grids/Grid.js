@@ -1,4 +1,4 @@
-import { renderComponent } from '../renderer/main.js';
+import { renderComponent } from '../../renderer/main.js';
 
 export function LinkGridContainer(data) {
     const childrenHtml = (data.components || [])

@@ -4,9 +4,9 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>AI First - Web Interface</title>
+    <title>AI-Realtor - Web Interface</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="AI First Operational Dashboard" name="description" />
+    <meta content="AI-Realtor Lead Manager" name="description" />
     <link rel="shortcut icon" href="themes/images/favicon.ico">
 
     <!-- Layout config Js -->
@@ -57,6 +57,12 @@
     <!-- Core Renderer -->
     <script src="themes/libs/sweetalert2/sweetalert2.min.js"></script>
     <script src="config.js"></script>
+    <script>
+        // Simple Auth Guard
+        if (!localStorage.getItem('access_token')) {
+            window.location.href = 'login.html';
+        }
+    </script>
     <script type="module" src="renderer/main.js?v=23"></script>
 </body>
 

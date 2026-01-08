@@ -29,11 +29,11 @@ export function LinkAppShell(data) {
                     <div class="container-fluid">
                         <div class="row">
                             <div class="col-sm-6">
-                                ${new Date().getFullYear()} © AI First.
+                                ${2026} © AI-Realtor.
                             </div>
                             <div class="col-sm-6">
                                 <div class="text-sm-end d-none d-sm-block">
-                                    Design & Develop by Themesbrand
+                                    Lead Manager
                                 </div>
                             </div>
                         </div>

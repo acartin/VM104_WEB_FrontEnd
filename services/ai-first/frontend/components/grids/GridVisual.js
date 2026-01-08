@@ -19,6 +19,7 @@ export function LinkGridVisual(component) {
     const formSchema = JSON.stringify(props.form_schema || []);
     const columnsJson = JSON.stringify(props.columns || []);
     const actionsJson = JSON.stringify(props.actions || []);
+    const filtersJson = JSON.stringify(props.filters || []);
 
     return `
         <div class="card">
@@ -29,6 +30,9 @@ export function LinkGridVisual(component) {
                 </div>
             </div>
             <div class="card-body">
+                <!-- Filter Toolbar -->
+                <div class="grid-filters-container row g-3 mb-3" id="${gridId}-filters"></div>
+
                 <div class="table-responsive table-card" style="min-height: 350px;">
                     <table class="table table-nowrap table-sm align-middle table-striped-columns mb-0 js-grid-visual" 
                            id="${gridId}" 
@@ -36,6 +40,7 @@ export function LinkGridVisual(component) {
                            data-schema='${formSchema.replace(/'/g, "&apos;")}'
                            data-columns='${columnsJson.replace(/'/g, "&apos;")}'
                            data-actions='${actionsJson.replace(/'/g, "&apos;")}'
+                           data-filters='${filtersJson.replace(/'/g, "&apos;")}'
                            >
                         <thead class="table-light">
                             <tr>

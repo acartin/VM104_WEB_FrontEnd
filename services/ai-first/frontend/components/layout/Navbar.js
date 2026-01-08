@@ -27,12 +27,7 @@ export function LinkNavbar(props = {}) {
 
                     <div class="d-flex align-items-center">
 
-                        <!-- Fullscreen -->
-                        <div class="ms-1 header-item d-none d-sm-flex">
-                            <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle shadow-none" data-toggle="fullscreen">
-                                <i class='bx bx-fullscreen fs-22'></i>
-                            </button>
-                        </div>
+
 
                         <!-- Dark/Light Mode -->
                         <div class="ms-1 header-item d-none d-sm-flex">
@@ -47,8 +42,8 @@ export function LinkNavbar(props = {}) {
                                 <span class="d-flex align-items-center">
                                     <img class="rounded-circle header-profile-user" src="themes/images/users/avatar-1.jpg" alt="Header Avatar">
                                     <span class="text-start ms-xl-2">
-                                        <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Admin</span>
-                                        <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">Founder</span>
+                                        <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text" id="header-user-name">Admin</span>
+                                        <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text" id="header-tenant-name">Founder</span>
                                     </span>
                                 </span>
                             </button>
@@ -56,7 +51,7 @@ export function LinkNavbar(props = {}) {
                                 <h6 class="dropdown-header">Welcome Admin!</h6>
                                 <a class="dropdown-item" href="/profile"><i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Profile</span></a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="/logout"><i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span class="align-middle" data-key="t-logout">Logout</span></a>
+                                <a class="dropdown-item" href="logout.html"><i class="mdi mdi-logout text-muted fs-16 align-middle me-1"></i> <span class="align-middle" data-key="t-logout">Logout</span></a>
                             </div>
                         </div>
                     </div>

@@ -58,6 +58,25 @@ export function renderInput(label, name, value = '', type = 'text', required = f
         `;
     }
 
+    if (type === 'select') {
+        const sourceUrl = validation.source || '';
+        const optionsHtml = (validation.options || []).map(opt => `<option value="${opt.value}" ${opt.value == value ? 'selected' : ''}>${opt.label}</option>`).join('');
+
+        // If source is provided, we mark it for hydration
+        const dataSourceAttr = sourceUrl ? `data-source="${sourceUrl}"` : '';
+        const dataValueAttr = value ? `data-value="${value}"` : '';
+
+        return `
+            <div class="mb-3">
+                <label for="${name}" class="form-label">${label}</label>
+                <select class="form-select" id="${name}" name="${name}" ${isRequired} ${dataSourceAttr} ${dataValueAttr}>
+                    <option value="">Select...</option>
+                    ${optionsHtml}
+                </select>
+            </div>
+        `;
+    }
+
     return `
         <div class="mb-3">
             <label for="${name}" class="form-label">${label}</label>
@@ -77,7 +96,9 @@ export function renderFormFromSchema(schema, data = {}) {
             min_length: field.min_length,
             max_length: field.max_length,
             pattern: field.pattern,
-            rows: field.rows
+            rows: field.rows,
+            source: field.source,
+            options: field.options
         };
         return renderInput(field.label, field.name, val, field.type, field.required, validation);
     }).join('');

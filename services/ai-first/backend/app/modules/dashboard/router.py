@@ -1,34 +1,38 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.contracts.ui_schema import UIAppShell
+from .menus import get_menu_for_role
+from app.modules.auth.config import current_active_user
+from app.modules.auth.models import User
 
 router = APIRouter()
 
 @router.get("/app-init", response_model=UIAppShell)
-async def app_init():
+async def app_init(user: User = Depends(current_active_user)):
     """
     Returns the initial application shell structure: Sidebar + Initial Content.
+    Dynamic based on User Role.
     """
+    # 1. Determine Role
+    # For MVP, we take the role from the FIRST tenant connection.
+    # In future, this could come from a 'X-Tenant-ID' header context.
+    from app.modules.auth.utils import get_current_role_slug
+    current_role = get_current_role_slug(user)
+    
+    # 2. Get Menu
+    menu_items = get_menu_for_role(current_role)
+    
     return {
         "layout": "dashboard-shell",
         "sidebar": {
             "brand": "AI First",
-            "items": [
-                {"id": "dash", "label": "Dashboard", "icon": "ri-dashboard-2-line", "link": "/dashboard"},
-                {"id": "clients", "label": "Clientes", "icon": "ri-user-line", "link": "/clients"},
-                {"id": "prompts", "label": "AI Prompts", "icon": "ri-robot-line", "link": "/prompts"},
-                {"id": "sys", "label": "Sistema", "icon": "ri-settings-line", "subItems": [
-                    {"id": "users", "label": "Usuarios", "link": "/users"},
-                    {"id": "roles", "label": "Roles", "link": "/roles"},
-                    {"id": "countries", "label": "Países", "link": "/countries"}
-                ]}
-            ]
+            "items": menu_items
         },
         "content": [
             {
                 "type": "grid",
                 "components": [
-                    {"type": "typography", "tag": "h2", "text": "Bienvenido al Panel de Control", "class": "mb-4"},
-                    {"type": "card-metric", "label": "Estado del Sistema", "value": "Operativo", "color": "success"}
+                    {"type": "typography", "tag": "h2", "text": f"Bienvenido, {user.name or 'Usuario'}", "class": "mb-4"},
+                    {"type": "card-metric", "label": "Tu Rol Actual", "value": current_role.upper(), "color": "info"}
                 ]
             }
         ]

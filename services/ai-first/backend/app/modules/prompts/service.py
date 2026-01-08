@@ -12,34 +12,52 @@ class PromptService:
     Tenant-Scoped: All operations require client_id.
     """
 
-    async def list_prompts(self, client_id: str) -> List[PromptRow]:
-        # Filter by client_id and ensure not soft-deleted
-        query = text("""
-            SELECT id, slug, prompt_text, is_active, updated_at 
-            FROM lead_ai_prompts 
-            WHERE client_id = :cid AND deleted_at IS NULL
-            ORDER BY slug ASC
+    async def list_prompts(self, client_id: Optional[str] = None) -> List[PromptRow]:
+        # Filter by client_id if provided (Tenant View), else ALL (Admin View)
+        # Assuming lead_clients exists and has 'name', we JOIN to get it.
+        
+        where_clause = "WHERE p.deleted_at IS NULL"
+        params = {}
+        
+        if client_id:
+            where_clause += " AND p.client_id = :cid"
+            params["cid"] = client_id
+            
+        query = text(f"""
+            SELECT p.id, p.slug, p.prompt_text, p.is_active, p.updated_at, c.name as client_name
+            FROM lead_ai_prompts p
+            LEFT JOIN lead_clients c ON p.client_id = c.id
+            {where_clause}
+            ORDER BY c.name ASC, p.slug ASC
         """)
+        
         async with engine.connect() as conn:
-            result = await conn.execute(query, {"cid": client_id})
+            result = await conn.execute(query, params)
             return [
                 PromptRow(
                     id=row.id, 
                     slug=row.slug, 
                     prompt_text=row.prompt_text, 
                     is_active=row.is_active, 
-                    updated_at=row.updated_at
+                    updated_at=row.updated_at,
+                    client_name=row.client_name
                 ) for row in result
             ]
 
-    async def get_prompt(self, client_id: str, prompt_id: UUID) -> Optional[PromptRow]:
-        query = text("""
+    async def get_prompt(self, client_id: Optional[str], prompt_id: UUID) -> Optional[PromptRow]:
+        where_clause = "WHERE id = :id AND deleted_at IS NULL"
+        params = {"id": prompt_id}
+        if client_id:
+            where_clause += " AND client_id = :cid"
+            params["cid"] = client_id
+            
+        query = text(f"""
             SELECT id, slug, prompt_text, is_active, updated_at 
             FROM lead_ai_prompts 
-            WHERE id = :id AND client_id = :cid AND deleted_at IS NULL
+            {where_clause}
         """)
         async with engine.connect() as conn:
-            result = await conn.execute(query, {"id": prompt_id, "cid": client_id})
+            result = await conn.execute(query, params)
             row = result.fetchone()
             if row:
                 return PromptRow(
@@ -83,31 +101,24 @@ class PromptService:
                 print(f"CREATE ERROR: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
-    async def update_prompt(self, client_id: str, prompt_id: UUID, prompt: PromptUpdate) -> Optional[PromptRow]:
-        updates = []
-        params = {"id": prompt_id, "cid": client_id}
-        
-        if prompt.slug:
-            updates.append("slug = :slug")
-            params["slug"] = prompt.slug
-        
-        if prompt.prompt_text:
-            updates.append("prompt_text = :text")
-            params["text"] = prompt.prompt_text
-            
-        if prompt.is_active is not None:
-            updates.append("is_active = :active")
-            params["active"] = prompt.is_active
-
         if not updates:
             return await self.get_prompt(client_id, prompt_id)
 
+        if prompt.client_id:
+            updates.append("client_id = :new_cid")
+            params["new_cid"] = str(prompt.client_id)
+
         updates.append("updated_at = NOW()")
         
+        where_clause = "WHERE id = :id"
+        if client_id:
+            where_clause += " AND client_id = :cid"
+            params["cid"] = client_id
+
         query_str = f"""
             UPDATE lead_ai_prompts
             SET {", ".join(updates)}
-            WHERE id = :id AND client_id = :cid
+            {where_clause}
             RETURNING id, slug, prompt_text, is_active, updated_at
         """
         
@@ -132,15 +143,21 @@ class PromptService:
                 print(f"UPDATE ERROR: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
-    async def delete_prompt(self, client_id: str, prompt_id: UUID) -> bool:
+    async def delete_prompt(self, client_id: Optional[str], prompt_id: UUID) -> bool:
         # Soft Delete
-        query = text("""
+        where_clause = "WHERE id = :id"
+        params = {"id": prompt_id}
+        if client_id:
+            where_clause += " AND client_id = :cid"
+            params["cid"] = client_id
+
+        query = text(f"""
             UPDATE lead_ai_prompts 
             SET deleted_at = NOW() 
-            WHERE id = :id AND client_id = :cid
+            {where_clause}
         """)
         async with engine.connect() as conn:
-            result = await conn.execute(query, {"id": prompt_id, "cid": client_id})
+            result = await conn.execute(query, params)
             await conn.commit()
             return result.rowcount > 0
 

@@ -10,18 +10,20 @@ class PromptBase(BaseModel):
     is_active: bool = Field(True, description="Whether this prompt is active")
 
 class PromptCreate(PromptBase):
-    """Schema for Creation - client_id is injected by backend"""
-    pass
+    """Schema for Creation - client_id can be provided by admin or inferred"""
+    client_id: Optional[UUID] = None
 
 class PromptUpdate(BaseModel):
     """Schema for Update - all fields optional"""
     slug: Optional[str] = Field(None, min_length=3)
     prompt_text: Optional[str] = Field(None, min_length=10)
     is_active: Optional[bool] = Field(None)
+    client_id: Optional[UUID] = None
 
 class PromptRow(PromptBase):
     """Schema for Grid Display"""
     id: UUID
+    client_name: Optional[str] = None # For Admin view
     updated_at: Optional[datetime]
     
     class Config:

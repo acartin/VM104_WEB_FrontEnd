@@ -150,3 +150,27 @@ We use a **Decoupled Strategy** to manage configuration:
 ### 8.2 Maintenance
 **Manual Sync Required**: If you change `API_BASE_URL` in `.env`, you **MUST** update `frontend/config.js` to match.
 *   *Future Optimization*: This can be automated via CI/CD pipelines or Docker entrypoints that generate `config.js` at runtime based on environment variables.
+
+## 9. Deployment & Environment Context
+This project runs within a structured Docker environment. It is CRITICAL to execute commands (e.g., Python scripts, Database migrations) within the appropriate container.
+
+### 9.1 Container Strategy
+*   **Backend API**: `prd-web-aifirst-api-01`
+    *   **Path**: `/app`
+    *   **Execution**: `docker exec -it prd-web-aifirst-api-01 python [script.py]`
+*   **Static Frontend**: `prd-web-aifirst-static-01`
+    *   **Path**: `/usr/share/nginx/html`
+
+### 9.2 Legacy Authentication Schema
+For Phase 1 Authentication integration, we connect to the existing User/Tenant tables located in the same database.
+
+**Table: `lead_users`**
+*   **Primary Key**: `id` (UUID)
+*   **Credentials**: `email`, `password` (Hashed), `username` (alias `name`?)
+*   **Status**: `available_status`, `can_receive_leads`
+
+**Table: `lead_client_user`** (Pivot)
+*   User-to-Tenant relationship table.
+*   **Columns**: `id`, `user_id`, `client_id`
+
+**Note**: Do NOT rely on local `venv` in the host machine as it may lack dependencies. Always use the Container.

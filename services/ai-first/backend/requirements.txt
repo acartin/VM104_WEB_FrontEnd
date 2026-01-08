@@ -11,4 +11,4 @@ httpx
 python-dotenv
 taskiq[redis]
 sqlalchemy
-sqlalchemy
+fastapi-users[sqlalchemy]

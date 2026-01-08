@@ -26,7 +26,21 @@ async function init() {
 
     try {
         // Fetch UI Schema from Backend
-        const response = await fetch(`${API_BASE_URL}/app-init`);
+        const token = localStorage.getItem('access_token');
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/app-init`, {
+            headers: headers
+        });
+
+        if (response.status === 401) {
+            // Token expired or invalid
+            window.location.href = 'login.html';
+            return;
+        }
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -54,6 +68,9 @@ async function init() {
 
             // Initialize Theme Switcher Logic
             setupThemeSwitcher();
+
+            // Populate Sidebar/Header Profile (New)
+            updateHeaderProfile();
 
             // Initialize SPA Navigation
             setupNavigation();
@@ -104,7 +121,15 @@ export async function navigateTo(href, pushState = true) {
 
     try {
         // Fetch View Data
-        const response = await fetch(`${API_BASE_URL}${href}`);
+        const token = localStorage.getItem('access_token');
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_BASE_URL}${href}`, {
+            headers: headers
+        });
 
         if (!response.ok) throw new Error(`View not found (${response.status})`);
 
@@ -184,7 +209,9 @@ window.openCreateCountryModal = () => {
 window.openEditCountryModal = async (id) => {
     try {
         // Fetch current data
-        const res = await fetch(`${API_BASE_URL}/countries/${id}`);
+        const token = localStorage.getItem('access_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch(`${API_BASE_URL}/countries/${id}`, { headers });
         const data = await res.json();
 
         const formFields = `
@@ -234,7 +261,10 @@ window.submitModalForm = async (formId, actionUrl, method) => {
     try {
         const res = await fetch(`${API_BASE_URL}${actionUrl}`, {
             method: method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
             body: JSON.stringify(payload)
         });
 
@@ -319,7 +349,9 @@ window.deleteItem = async (url, confirmMsg) => {
     }).then(async function (result) {
         if (result.value) {
             try {
-                const res = await fetch(`${API_BASE_URL}${url}`, { method: 'DELETE' });
+                const token = localStorage.getItem('access_token');
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                const res = await fetch(`${API_BASE_URL}${url}`, { method: 'DELETE', headers });
                 if (res.ok) {
                     hydrateGrids();
                     Swal.fire({
@@ -370,7 +402,35 @@ window.openGenericModal = async (schema, url, method, title, data = {}) => {
     modalEl.addEventListener('hidden.bs.modal', () => {
         modalContainer.remove();
     });
+
+    // Hydrate Selects
+    hydrateModalSelects(modalEl);
 };
+
+async function hydrateModalSelects(modalEl) {
+    const selects = modalEl.querySelectorAll('select[data-source]');
+    selects.forEach(async (select) => {
+        const url = select.dataset.source;
+        const initialValue = select.dataset.value;
+
+        try {
+            const token = localStorage.getItem('access_token');
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+            const res = await fetch(`${API_BASE_URL}${url}`, { headers });
+            const options = await res.json();
+
+            // Rebuild Options
+            const optsHtml = options.map(opt => {
+                const isSel = (String(opt.id) === String(initialValue)) ? 'selected' : '';
+                return `<option value="${opt.id}" ${isSel}>${opt.name}</option>`;
+            }).join('');
+
+            select.innerHTML = '<option value="">Select...</option>' + optsHtml;
+        } catch (e) {
+            console.error('Failed to hydration select', e);
+        }
+    });
+}
 
 // Generic Edit Handler (Fetch + Open Modal)
 window.handleEditAction = async (id, urlPattern, schemaStr) => {
@@ -393,7 +453,9 @@ window.handleEditAction = async (id, urlPattern, schemaStr) => {
     }
 
     try {
-        const res = await fetch(`${API_BASE_URL}${fetchUrl}`);
+        const token = localStorage.getItem('access_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch(`${API_BASE_URL}${fetchUrl}`, { headers });
         if (!res.ok) throw new Error("Failed to fetch data");
         const data = await res.json();
 
@@ -428,102 +490,120 @@ window.handleGenericAction = (btn) => {
         console.warn('Missing action or schema');
     }
 };
-export async function hydrateGrids() {
-    const grids = document.querySelectorAll('.js-grid-visual');
+// Reusable Data Fetcher
+async function fetchGridData(table, params = {}) {
+    const url = table.dataset.url;
+    if (!url) return;
 
-    grids.forEach(async (table) => {
-        const url = table.dataset.url;
-        if (!url) return;
+    try {
+        const token = localStorage.getItem('access_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-        // Metadata from DOM
+        // Construct Query Params
+        const urlObj = new URL(`${API_BASE_URL}${url}`);
+        Object.keys(params).forEach(key => urlObj.searchParams.append(key, params[key]));
+
+        const res = await fetch(urlObj.toString(), { headers });
+        if (!res.ok) throw new Error('Failed');
+        const data = await res.json();
+        const tbody = table.querySelector('tbody');
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="100%" class="text-center">No data found</td></tr>';
+            return;
+        }
+
+        const columns = JSON.parse(table.dataset.columns || '[]');
+        const actions = JSON.parse(table.dataset.actions || '[]');
         const schemaStr = table.dataset.schema || '[]';
-        const columnsStr = table.dataset.columns || '[]';
-        const actionsStr = table.dataset.actions || '[]';
 
-        const columns = JSON.parse(columnsStr);
-        const actions = JSON.parse(actionsStr);
+        const rowsHtml = data.map(row => {
+            // Render Columns
+            const colsHtml = columns.map(col => {
+                let val = row[col.key];
+                if (val === undefined || val === null) val = '-';
 
-        try {
-            const res = await fetch(`${API_BASE_URL}${url}`);
-            if (!res.ok) throw new Error('Failed');
-            const data = await res.json();
-
-            const tbody = table.querySelector('tbody');
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="100%" class="text-center">No data found</td></tr>';
-                return;
-            }
-
-            const rowsHtml = data.map(row => {
-                // Generically render columns
-                const colsHtml = columns.map(col => {
-                    let val = row[col.key];
-                    if (val === undefined || val === null) val = '-';
-
-                    if (col.type === 'badge') {
-                        // Badge Map lookup (convert bool to string key)
-                        const mapKey = String(val); // "true" or "false"
-                        const badgeColor = (col.badge_map && col.badge_map[mapKey])
-                            ? col.badge_map[mapKey]
-                            : (col.color || 'primary');
-                        return `<td><span class="badge bg-${badgeColor}">${val}</span></td>`;
-                    }
-                    if (col.truncate && typeof val === 'string' && val.length > col.truncate) {
-                        val = val.substring(0, col.truncate) + '...';
-                    }
-                    return `<td>${val}</td>`;
-                }).join('');
-
-                // Generically render actions as Dropdown
-                let actionsHtml = '';
-                if (actions && actions.length > 0) {
-                    const dropdownItems = actions.map(act => {
-                        let itemContent = '';
-                        if (act.action === 'modal-form') {
-                            itemContent = `
-                                <a class="dropdown-item edit-item-btn" href="javascript:void(0);"
-                                   onclick="window.handleEditAction('${row.id}', '${act.action_url}', '${btoa(schemaStr)}')">
-                                    <i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}
-                                </a>`;
-                        } else if (act.action === 'api-call' && act.method === 'DELETE') {
-                            itemContent = `
-                                <a class="dropdown-item remove-item-btn" href="javascript:void(0);"
-                                   onclick="window.deleteItem('${act.action_url.replace('{id}', row.id)}', '${act.confirm_message || ''}')">
-                                    <i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}
-                                </a>`;
-                        }
-                        return `<li>${itemContent}</li>`;
-                    }).join('');
-
-                    actionsHtml = `
-                        <div class="dropdown d-inline-block">
-                            <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="ri-more-fill fs-5 align-middle"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                ${dropdownItems}
-                            </ul>
-                        </div>
-                    `;
+                if (col.type === 'badge') {
+                    const mapKey = String(val);
+                    const badgeColor = (col.badge_map && col.badge_map[mapKey]) ? col.badge_map[mapKey] : (col.color || 'primary');
+                    return `<td><span class="badge bg-${badgeColor}">${val}</span></td>`;
                 }
-
-                return `
-                    <tr>
-                        ${colsHtml}
-                        <td class="py-1">
-                            ${actionsHtml}
-                        </td>
-                    </tr>
-                `;
-
+                if (col.truncate && typeof val === 'string' && val.length > col.truncate) {
+                    val = val.substring(0, col.truncate) + '...';
+                }
+                return `<td>${val}</td>`;
             }).join('');
 
-            tbody.innerHTML = rowsHtml;
+            // Render Actions
+            let actionsHtml = '';
+            if (actions && actions.length > 0) {
+                const dropdownItems = actions.map(act => {
+                    if (act.action === 'modal-form') {
+                        return `<li><a class="dropdown-item" href="#" onclick="window.handleEditAction('${row.id}', '${act.action_url}', '${btoa(schemaStr)}')"><i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}</a></li>`;
+                    }
+                    if (act.action === 'api-call' && act.method === 'DELETE') {
+                        return `<li><a class="dropdown-item" href="#" onclick="window.deleteItem('${act.action_url.replace('{id}', row.id)}', '${act.confirm_message}')"><i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}</a></li>`;
+                    }
+                    return '';
+                }).join('');
+                actionsHtml = `<div class="dropdown"><button class="btn btn-soft-secondary btn-sm" data-bs-toggle="dropdown"><i class="ri-more-fill"></i></button><ul class="dropdown-menu dropdown-menu-end">${dropdownItems}</ul></div>`;
+            }
+            return `<tr>${colsHtml}<td class="py-1">${actionsHtml}</td></tr>`;
+        }).join('');
 
-        } catch (e) {
-            console.error(e);
-            const tbody = table.querySelector('tbody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="100%" class="text-danger">Error loading data</td></tr>';
+        tbody.innerHTML = rowsHtml;
+
+    } catch (e) {
+        console.error(e);
+        const tbody = table.querySelector('tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="100%" class="text-danger">Error loading data</td></tr>';
+    }
+}
+
+export async function hydrateGrids() {
+    const grids = document.querySelectorAll('.js-grid-visual');
+    grids.forEach(async (table) => {
+        // 1. Initial Load
+        const currentParams = {};
+        await fetchGridData(table, currentParams);
+
+        // 2. Setup Filters
+        const filtersStr = table.dataset.filters;
+        if (filtersStr) {
+            const filters = JSON.parse(filtersStr);
+            const container = document.getElementById(table.id + '-filters');
+
+            if (container && container.innerHTML === '') {
+                for (const filter of filters) {
+                    // Create Params Object for Filter Fetching
+                    const headers = { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` };
+
+                    // Fetch Options (e.g. /clients/simple-list)
+                    fetch(`${API_BASE_URL}${filter.source}`, { headers })
+                        .then(r => r.json())
+                        .then(options => {
+                            // Create Select
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'col-md-3';
+
+                            const select = document.createElement('select');
+                            select.className = 'form-select';
+                            select.innerHTML = `<option value="">${filter.label}</option>` + options.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+
+                            // Bind Change Event
+                            select.addEventListener('change', (e) => {
+                                const val = e.target.value;
+                                if (val) currentParams[filter.key] = val;
+                                else delete currentParams[filter.key];
+
+                                fetchGridData(table, currentParams);
+                            });
+
+                            wrapper.appendChild(select);
+                            container.appendChild(wrapper);
+                        });
+                }
+            }
         }
     });
 }
@@ -573,6 +653,42 @@ function setupNavigation() {
         const path = window.location.pathname;
         if (path) navigateTo(path, false);
     });
+}
+
+/**
+ * Reads user profile from localStorage and updates the Navbar.
+ * Displays User Name and Client Name (Coca Cola).
+ */
+function updateHeaderProfile() {
+    try {
+        const profileStr = localStorage.getItem('user_profile');
+        if (!profileStr) return;
+
+        const profile = JSON.parse(profileStr);
+
+        // Update User Name
+        const nameEl = document.getElementById('header-user-name');
+        if (nameEl && profile.name) {
+            nameEl.textContent = profile.name; // e.g. "Alvaro Cartin"
+        }
+
+        // Update Tenant Name
+        const tenantEl = document.getElementById('header-tenant-name');
+        if (tenantEl) {
+            if (profile.is_superuser) {
+                tenantEl.textContent = 'Global Administrator';
+            } else if (profile.tenants && profile.tenants.length > 0) {
+                const tenant = profile.tenants[0];
+                if (tenant.client && tenant.client.name) {
+                    tenantEl.textContent = `Client Admin - ${tenant.client.name}`;
+                } else {
+                    tenantEl.textContent = 'Client Admin';
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to update header profile:', e);
+    }
 }
 
 // Start Engine

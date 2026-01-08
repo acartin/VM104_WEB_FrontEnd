@@ -3,8 +3,10 @@ from app.contracts.ui_schema import WebIAFirstResponse
 from .schemas import CountryCreate, CountryUpdate, CountryRow
 from .service import service
 from typing import List
+from app.modules.auth.dependencies import RoleChecker
 
-router = APIRouter()
+# Lock down the entire module to Admins only
+router = APIRouter(dependencies=[Depends(RoleChecker(["admin"]))])
 
 # --- SERVER DRIVEN UI (SDUI) ---
 

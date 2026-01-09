@@ -30,49 +30,42 @@ export function LinkGridVisual(component) {
                 </div>
             </div>
             <div class="card-body">
-                <!-- Filter Toolbar -->
-                <div class="grid-filters-container row g-3 mb-3" id="${gridId}-filters"></div>
-
-                <div class="table-responsive table-card" style="min-height: 350px;">
-                    <table class="table table-nowrap table-sm align-middle table-striped-columns mb-0 js-grid-visual" 
-                           id="${gridId}" 
-                           data-url="${dataUrl}"
-                           data-schema='${formSchema.replace(/'/g, "&apos;")}'
-                           data-columns='${columnsJson.replace(/'/g, "&apos;")}'
-                           data-actions='${actionsJson.replace(/'/g, "&apos;")}'
-                           data-filters='${filtersJson.replace(/'/g, "&apos;")}'
-                           >
-                        <thead class="table-light">
-                            <tr>
-                                ${headers}
-                                <th scope="col">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="${columns.length + 1}" class="text-center p-3">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="sr-only">Loading...</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="table-card js-grid-visual-parent">
+                    <div id="${gridId}" 
+                         class="js-grid-visual"
+                         data-url="${dataUrl}"
+                         data-schema='${formSchema.replace(/'/g, "&apos;")}'
+                         data-columns='${columnsJson.replace(/'/g, "&apos;")}'
+                         data-actions='${actionsJson.replace(/'/g, "&apos;")}'
+                         data-filters='${filtersJson.replace(/'/g, "&apos;")}'
+                         >
+                         <div class="text-center p-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                         </div>
+                    </div>
                 </div>
             </div>
         </div>
     `;
 }
 
-function renderHeaderAction(btn, schema) {
+function renderHeaderAction(btn, globalSchema) {
     if (btn.action === 'modal-form') {
-        const schemaAttr = schema ? `data-schema='${JSON.stringify(schema).replace(/'/g, "&apos;")}'` : '';
+        // Prioritize action-level schema, fallback to global grid schema
+        const schema = btn.schema || globalSchema;
+        // If it's already a string (like base64 from backend), use it directly. 
+        // If it's an object, stringify it.
+        const schemaVal = typeof schema === 'string' ? schema : JSON.stringify(schema || []);
+        const schemaAttr = schemaVal ? `data-schema='${schemaVal.replace(/'/g, "&apos;")}'` : '';
+
         return `
             <button type="button" class="btn btn-${btn.color || 'primary'} btn-sm" 
                 onclick="window.handleGenericAction(this)"
                 data-action="${btn.action}"
                 data-url="${btn.action_url}"
-                data-title="${btn.modal_title}"
+                data-title="${btn.modal_title || btn.label}"
                 data-method="POST"
                 ${schemaAttr}>
                 <i class="${btn.icon} fs-5 align-middle me-1"></i> ${btn.label}

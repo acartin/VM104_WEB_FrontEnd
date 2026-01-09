@@ -1,0 +1,451 @@
+Table admin_sessions {
+  id varchar [pk, not null]
+  user_id uuid
+  ip_address varchar
+  user_agent text
+  payload text [not null]
+  last_activity integer [not null]
+}
+
+Table app_sessions {
+  id varchar [pk, not null]
+  user_id uuid
+  ip_address varchar
+  user_agent text
+  payload text [not null]
+  last_activity integer [not null]
+}
+
+Table auth_client_user {
+  id uuid [pk, not null]
+  user_id uuid [not null]
+  client_id uuid [not null]
+  role_id uuid [not null]
+}
+
+Table auth_roles {
+  id uuid [pk, not null]
+  name varchar [not null]
+  slug varchar [not null]
+}
+
+Table auth_users {
+  name varchar
+  id uuid [pk, not null]
+  email varchar [not null]
+  hashed_password varchar [not null]
+  is_active boolean [not null]
+  is_superuser boolean [not null]
+  is_verified boolean [not null]
+}
+
+Table cache {
+  key varchar [pk, not null]
+  value text [not null]
+  expiration integer [not null]
+}
+
+Table cache_locks {
+  key varchar [pk, not null]
+  owner varchar [not null]
+  expiration integer [not null]
+}
+
+Table failed_jobs {
+  id bigint [pk, not null]
+  uuid varchar [not null]
+  connection text [not null]
+  queue text [not null]
+  payload text [not null]
+  exception text [not null]
+  failed_at timestamp without time zone [not null]
+}
+
+Table filament_model_has_permissions {
+  permission_id bigint [pk, not null]
+  model_type varchar [pk, not null]
+  model_id uuid [pk, not null]
+}
+
+Table filament_model_has_roles {
+  role_id bigint [pk, not null]
+  model_type varchar [pk, not null]
+  model_id uuid [pk, not null]
+}
+
+Table filament_password_reset_tokens {
+  email varchar [pk, not null]
+  token varchar [not null]
+  created_at timestamp without time zone
+}
+
+Table filament_permissions {
+  id bigint [pk, not null]
+  name varchar [not null]
+  guard_name varchar [not null]
+  created_at timestamp without time zone
+  updated_at timestamp without time zone
+}
+
+Table filament_role_has_permissions {
+  permission_id bigint [pk, not null]
+  role_id bigint [pk, not null]
+}
+
+Table filament_roles {
+  id bigint [pk, not null]
+  name varchar [not null]
+  guard_name varchar [not null]
+  created_at timestamp without time zone
+  updated_at timestamp without time zone
+}
+
+Table job_batches {
+  id varchar [pk, not null]
+  name varchar [not null]
+  total_jobs integer [not null]
+  pending_jobs integer [not null]
+  failed_jobs integer [not null]
+  failed_job_ids text [not null]
+  options text
+  cancelled_at integer
+  created_at integer [not null]
+  finished_at integer
+}
+
+Table jobs {
+  id bigint [pk, not null]
+  queue varchar [not null]
+  payload text [not null]
+  attempts smallint [not null]
+  reserved_at integer
+  available_at integer [not null]
+  created_at integer [not null]
+}
+
+Table lead_ai_prompts {
+  id uuid [pk, not null]
+  client_id uuid
+  slug text [not null]
+  prompt_text text [not null]
+  is_active boolean
+  created_at timestamp without time zone
+  updated_at timestamp without time zone
+  deleted_at timestamp without time zone
+}
+
+Table lead_appointments {
+  id uuid [pk, not null]
+  lead_id uuid [not null]
+  property_id uuid
+  contact_id uuid [not null]
+  scheduled_at timestamp [not null]
+  duration_minutes smallint
+  timezone varchar
+  meeting_type varchar
+  status varchar
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table lead_channel_categories {
+  id integer [pk, not null]
+  name varchar [not null]
+}
+
+Table lead_client_channels {
+  id uuid [pk, not null]
+  client_id uuid [not null]
+  channel_id integer [not null]
+  value varchar [not null]
+  internal_name varchar [not null]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table lead_client_user {
+  id uuid [pk, not null]
+  client_id uuid [not null]
+  user_id uuid [not null]
+  created_at timestamp without time zone
+  updated_at timestamp without time zone
+}
+
+Table lead_clients {
+  id uuid [pk, not null]
+  name varchar [not null]
+  country_id integer [not null]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  slug varchar
+}
+
+Table lead_communication_channels {
+  id integer [pk, not null]
+  name varchar [not null]
+  icon varchar
+  active boolean
+}
+
+Table lead_contact_methods {
+  id uuid [pk, not null]
+  user_id uuid [not null]
+  channel_id integer [not null]
+  value varchar [not null]
+  label varchar
+  is_primary boolean
+  updated_at timestamp
+}
+
+Table lead_contact_preferences {
+  id uuid [pk, not null]
+  slug varchar [not null]
+  name varchar [not null]
+  icon varchar
+  color varchar
+  active boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table lead_conversations {
+  id uuid [pk, not null]
+  lead_id uuid [not null]
+  platform varchar [not null]
+  conversation_id varchar
+  messages jsonb [not null]
+  summary text
+  sentiment varchar
+  started_at timestamp without time zone
+  ended_at timestamp without time zone
+  last_message_at timestamp without time zone
+  total_messages integer
+  bot_messages integer
+  lead_messages integer
+  created_at timestamp without time zone
+  updated_at timestamp without time zone
+  deleted_at timestamp without time zone
+}
+
+Table lead_countries {
+  id integer [pk, not null]
+  name varchar [not null]
+  iso_code character [not null]
+  updated_at timestamp
+}
+
+Table lead_currencies {
+  id character [pk, not null]
+  symbol varchar [not null]
+  updated_at timestamp
+}
+
+Table lead_integrations {
+  id uuid [pk, not null]
+  client_id uuid [not null]
+  provider varchar [not null]
+  name varchar [not null]
+  credentials text [not null]
+  status boolean [not null]
+  settings json
+  created_at timestamp without time zone
+  updated_at timestamp without time zone
+}
+
+Table lead_knowledge_documents {
+  id bigint [pk, not null]
+  client_id uuid [not null]
+  filename varchar [not null]
+  storage_path varchar [not null]
+  content_hash varchar
+  sync_status varchar
+  last_synced_at timestamp without time zone
+  created_at timestamp without time zone
+  error_message text
+}
+
+Table lead_leads {
+  id uuid [pk, not null]
+  client_id uuid [not null]
+  source_id bigint [not null]
+  origin_channel_id uuid
+  assigned_user_id uuid
+  full_name varchar [not null]
+  email varchar
+  phone varchar
+  declared_income numeric
+  current_debts numeric
+  financial_currency_id character
+  status varchar
+  created_at timestamp without time zone
+  updated_at timestamp without time zone
+  deleted_at timestamp without time zone
+  score_engagement integer
+  score_finance integer
+  score_timeline integer
+  score_match integer
+  score_info integer
+  score_total integer
+  eng_def_id bigint
+  fin_def_id bigint
+  timeline_def_id bigint
+  match_def_id bigint
+  info_def_id bigint
+  priority_def_id bigint
+  source_property_ref varchar
+  source_property_url text
+  estimated_value numeric
+  property_snapshot jsonb
+  utm_source varchar
+  utm_medium varchar
+  utm_campaign varchar
+  utm_content varchar
+  utm_term varchar
+  click_id varchar
+  click_id_type varchar
+  referrer_url text
+  landing_page_url text
+  user_agent text
+  ip_address varchar
+  contact_preference_id uuid
+  status_id uuid
+}
+
+Table lead_properties {
+  id uuid [pk, not null]
+  client_id uuid [not null]
+  property_type_id integer [not null]
+  assigned_contact_id uuid
+  title varchar [not null]
+  description text
+  address_street varchar
+  address_city varchar
+  address_state varchar
+  address_zip varchar
+  location_lat numeric
+  location_lng numeric
+  bedrooms smallint
+  bathrooms numeric
+  area_sqm numeric
+  features jsonb
+  price numeric [not null]
+  currency_id character [not null]
+  status varchar
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  external_ref varchar
+  public_url text
+}
+
+Table lead_property_types {
+  id integer [pk, not null]
+  name varchar [not null]
+}
+
+Table lead_scoring_definitions {
+  id bigint [pk, not null]
+  criterion varchar [not null]
+  min_score integer [not null]
+  max_score integer [not null]
+  label varchar [not null]
+  meaning text [not null]
+  icon varchar
+  color varchar [not null]
+  is_active boolean [not null]
+}
+
+Table lead_sources {
+  id integer [pk, not null]
+  name varchar [not null]
+  type varchar [not null]
+  icon varchar
+}
+
+Table lead_status_history {
+  id uuid [pk, not null]
+  lead_id uuid [not null]
+  old_status varchar
+  new_status varchar [not null]
+  changed_by uuid
+  notes text
+  changed_at timestamp
+}
+
+Table lead_statuses {
+  id uuid [pk, not null]
+  key varchar [not null]
+  name varchar [not null]
+  icon varchar
+  color varchar
+  order integer
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table lead_users {
+  id uuid [pk, not null]
+  name varchar [not null]
+  email varchar [not null]
+  email_verified_at timestamp without time zone
+  password varchar [not null]
+  remember_token varchar
+  created_at timestamp without time zone
+  updated_at timestamp without time zone
+  job_title varchar
+  available_status varchar [not null]
+  can_receive_leads boolean
+  theme varchar
+  theme_color varchar
+}
+
+Table migrations {
+  id integer [pk, not null]
+  migration varchar [not null]
+  batch integer [not null]
+}
+
+Table sessions {
+  id varchar [pk, not null]
+  user_id uuid
+  ip_address varchar
+  user_agent text
+  payload text [not null]
+  last_activity integer [not null]
+}
+
+Ref: lead_leads.source_id > lead_sources.id
+Ref: lead_leads.assigned_user_id > lead_users.id
+Ref: lead_ai_prompts.client_id > lead_clients.id
+Ref: auth_client_user.user_id > auth_users.id
+Ref: lead_leads.eng_def_id > lead_scoring_definitions.id
+Ref: lead_leads.fin_def_id > lead_scoring_definitions.id
+Ref: lead_leads.timeline_def_id > lead_scoring_definitions.id
+Ref: lead_leads.match_def_id > lead_scoring_definitions.id
+Ref: lead_leads.info_def_id > lead_scoring_definitions.id
+Ref: lead_leads.priority_def_id > lead_scoring_definitions.id
+Ref: filament_model_has_permissions.permission_id > filament_permissions.id
+Ref: filament_model_has_roles.role_id > filament_roles.id
+Ref: filament_role_has_permissions.permission_id > filament_permissions.id
+Ref: filament_role_has_permissions.role_id > filament_roles.id
+Ref: lead_leads.contact_preference_id > lead_contact_preferences.id
+Ref: lead_leads.client_id > lead_clients.id
+Ref: auth_client_user.client_id > lead_clients.id
+Ref: auth_client_user.role_id > auth_roles.id
+Ref: lead_properties.client_id > lead_clients.id
+Ref: lead_properties.property_type_id > lead_property_types.id
+Ref: lead_properties.currency_id > lead_currencies.id
+Ref: lead_clients.country_id > lead_countries.id
+Ref: lead_client_channels.client_id > lead_clients.id
+Ref: lead_leads.status_id > lead_statuses.id
+Ref: lead_appointments.property_id > lead_properties.id
+Ref: lead_integrations.client_id > lead_clients.id
+Ref: lead_client_user.client_id > lead_clients.id
+Ref: lead_client_user.user_id > lead_users.id
+Ref: lead_contact_methods.channel_id > lead_communication_channels.id
+Ref: lead_contact_methods.user_id > lead_users.id
+Ref: lead_knowledge_documents.client_id > lead_clients.id
+Ref: lead_conversations.lead_id > lead_leads.id

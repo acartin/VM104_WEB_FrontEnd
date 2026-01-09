@@ -12,8 +12,8 @@ MENU_SYSTEM = {
     "label": "Sistema", 
     "icon": "ri-settings-line", 
     "subItems": [
-        {"id": "users", "label": "Usuarios", "link": "/users"},
-        {"id": "roles", "label": "Roles", "link": "/roles"},
+        {"id": "users", "label": "Usuarios", "link": "/system/users"},
+        {"id": "roles", "label": "Roles", "link": "/system/roles"},
         {"id": "countries", "label": "Países (Global)", "link": "/countries"}
     ]
 }
@@ -28,7 +28,6 @@ ROLE_MENUS = {
         MENU_DASHBOARD,
         MENU_CLIENTS,    # Gestión de Inquilinos
         MENU_PROMPTS,
-        MENU_COUNTRIES,
         MENU_SYSTEM
     ],
 

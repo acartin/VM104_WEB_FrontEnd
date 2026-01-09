@@ -24,7 +24,7 @@ class PromptService:
             params["cid"] = client_id
             
         query = text(f"""
-            SELECT p.id, p.slug, p.prompt_text, p.is_active, p.updated_at, c.name as client_name
+            SELECT p.id, p.client_id, p.slug, p.prompt_text, p.is_active, p.updated_at, c.name as client_name
             FROM lead_ai_prompts p
             LEFT JOIN lead_clients c ON p.client_id = c.id
             {where_clause}
@@ -36,6 +36,7 @@ class PromptService:
             return [
                 PromptRow(
                     id=row.id, 
+                    client_id=row.client_id,
                     slug=row.slug, 
                     prompt_text=row.prompt_text, 
                     is_active=row.is_active, 
@@ -52,7 +53,7 @@ class PromptService:
             params["cid"] = client_id
             
         query = text(f"""
-            SELECT id, slug, prompt_text, is_active, updated_at 
+            SELECT id, client_id, slug, prompt_text, is_active, updated_at 
             FROM lead_ai_prompts 
             {where_clause}
         """)
@@ -62,6 +63,7 @@ class PromptService:
             if row:
                 return PromptRow(
                     id=row.id, 
+                    client_id=row.client_id,
                     slug=row.slug, 
                     prompt_text=row.prompt_text, 
                     is_active=row.is_active, 
@@ -73,7 +75,7 @@ class PromptService:
         query = text("""
             INSERT INTO lead_ai_prompts (client_id, slug, prompt_text, is_active, created_at, updated_at)
             VALUES (:cid, :slug, :text, :active, NOW(), NOW())
-            RETURNING id, slug, prompt_text, is_active, updated_at
+            RETURNING id, client_id, slug, prompt_text, is_active, updated_at
         """)
         params = {
             "cid": client_id,
@@ -89,6 +91,7 @@ class PromptService:
                 await conn.commit()
                 return PromptRow(
                     id=row.id, 
+                    client_id=row.client_id,
                     slug=row.slug, 
                     prompt_text=row.prompt_text, 
                     is_active=row.is_active, 
@@ -101,16 +104,29 @@ class PromptService:
                 print(f"CREATE ERROR: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
-        if not updates:
-            return await self.get_prompt(client_id, prompt_id)
+    async def update_prompt(self, client_id: Optional[str], prompt_id: UUID, prompt: PromptUpdate) -> Optional[PromptRow]:
+        updates = []
+        params = {"id": prompt_id}
 
+        if prompt.slug:
+            updates.append("slug = :slug")
+            params["slug"] = prompt.slug
+        if prompt.prompt_text:
+            updates.append("prompt_text = :text")
+            params["text"] = prompt.prompt_text
+        if prompt.is_active is not None:
+            updates.append("is_active = :active")
+            params["active"] = prompt.is_active
         if prompt.client_id:
             updates.append("client_id = :new_cid")
             params["new_cid"] = str(prompt.client_id)
 
+        if not updates:
+            return await self.get_prompt(client_id, prompt_id)
+
         updates.append("updated_at = NOW()")
         
-        where_clause = "WHERE id = :id"
+        where_clause = "WHERE id = :id AND deleted_at IS NULL"
         if client_id:
             where_clause += " AND client_id = :cid"
             params["cid"] = client_id
@@ -119,7 +135,7 @@ class PromptService:
             UPDATE lead_ai_prompts
             SET {", ".join(updates)}
             {where_clause}
-            RETURNING id, slug, prompt_text, is_active, updated_at
+            RETURNING id, client_id, slug, prompt_text, is_active, updated_at
         """
         
         async with engine.connect() as conn:
@@ -130,6 +146,7 @@ class PromptService:
                 if row:
                     return PromptRow(
                         id=row.id, 
+                        client_id=row.client_id,
                         slug=row.slug, 
                         prompt_text=row.prompt_text, 
                         is_active=row.is_active, 

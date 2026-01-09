@@ -157,8 +157,9 @@ async def list_data(
 
 @router.get("/{item_id}", response_model=PromptRow)
 async def get_item(item_id: UUID, user: User = Depends(current_active_user)):
-    client_id = get_current_client_id(user)
-    item = await service.get_prompt(client_id, item_id)
+    current_role = get_current_role_slug(user)
+    owner_client_id = str(get_current_client_id(user)) if current_role != "admin" else None
+    item = await service.get_prompt(owner_client_id, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Prompt not found")
     return item

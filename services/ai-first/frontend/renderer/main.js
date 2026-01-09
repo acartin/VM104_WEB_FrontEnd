@@ -275,7 +275,7 @@ window.submitModalForm = async (formId, actionUrl, method) => {
             modal.hide();
 
             // Refresh Grid
-            hydrateGrids();
+            refreshGrids();
 
             // SweetAlert Success
             Swal.fire({
@@ -332,8 +332,11 @@ window.submitModalForm = async (formId, actionUrl, method) => {
 };
 
 // Delete Action
-// Delete Action
-window.deleteItem = async (url, confirmMsg) => {
+window.deleteItem = async (event, url, confirmMsg) => {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
     Swal.fire({
         title: "Are you sure?",
         text: "You won't be able to revert this!",
@@ -353,7 +356,7 @@ window.deleteItem = async (url, confirmMsg) => {
                 const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
                 const res = await fetch(`${API_BASE_URL}${url}`, { method: 'DELETE', headers });
                 if (res.ok) {
-                    hydrateGrids();
+                    refreshGrids();
                     Swal.fire({
                         title: "Deleted!",
                         text: "Your file has been deleted.",
@@ -384,8 +387,21 @@ window.deleteItem = async (url, confirmMsg) => {
 };
 
 
+// Safe UTF-8 Base64 Decode
+function safeAtob(str) {
+    try {
+        return decodeURIComponent(atob(str).split('').map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    } catch (e) {
+        // Fallback for non-UTF8 base64
+        return atob(str);
+    }
+}
+
 // Generic Modal Opener
 window.openGenericModal = async (schema, url, method, title, data = {}) => {
+    console.log('Opening Generic Modal:', { title, url, method });
     const formFields = renderFormFromSchema(schema, data);
     const modalId = `modal-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -433,14 +449,20 @@ async function hydrateModalSelects(modalEl) {
 }
 
 // Generic Edit Handler (Fetch + Open Modal)
-window.handleEditAction = async (id, urlPattern, schemaStr) => {
+window.handleEditAction = async (event, id, urlPattern, schemaStr) => {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    console.log('Handle Edit Action:', { id, urlPattern });
     const fetchUrl = urlPattern.replace('{id}', id);
 
     // Robust Schema Decoding (Base64 or Raw JSON)
     let schema = [];
     try {
         // Try decoding Base64 first
-        schema = JSON.parse(atob(schemaStr));
+        schema = JSON.parse(safeAtob(schemaStr));
     } catch (e) {
         // Fallback: Try parsing as raw JSON (legacy support)
         try {
@@ -460,8 +482,9 @@ window.handleEditAction = async (id, urlPattern, schemaStr) => {
         const data = await res.json();
 
         const updateUrl = fetchUrl; // Standard REST: GET /items/1 -> PUT /items/1
-        window.openGenericModal(schema, updateUrl, 'PUT', 'Edit Item', data);
+        window.openGenericModal(schema, updateUrl, 'PUT', 'Editar registro', data);
     } catch (e) {
+        console.error('Edit Fetch Error:', e);
         Swal.fire({ icon: 'error', title: 'Error', text: 'Could not fetch data for editing.' });
     }
 };
@@ -480,7 +503,13 @@ window.handleGenericAction = (btn) => {
 
     if (action === 'modal-form' && schemaStr) {
         try {
-            const schema = JSON.parse(schemaStr);
+            // Check if it's base64 (common for dynamic SDUI) or raw JSON
+            let schema = [];
+            try {
+                schema = JSON.parse(safeAtob(schemaStr));
+            } catch (e) {
+                schema = JSON.parse(schemaStr);
+            }
             openGenericModal(schema, url, method, title);
         } catch (e) {
             console.error('Schema Parse Error:', e);
@@ -491,120 +520,185 @@ window.handleGenericAction = (btn) => {
     }
 };
 // Reusable Data Fetcher
-async function fetchGridData(table, params = {}) {
-    const url = table.dataset.url;
-    if (!url) return;
+// --- HYDRATION ---
+window.gridInstances = {}; // Registry to allow refreshing
+
+async function fetchGridDataForGridJs(container, params = {}) {
+    const url = container.dataset.url;
+    if (!url) return [];
 
     try {
         const token = localStorage.getItem('access_token');
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-        // Construct Query Params
         const urlObj = new URL(`${API_BASE_URL}${url}`);
         Object.keys(params).forEach(key => urlObj.searchParams.append(key, params[key]));
 
         const res = await fetch(urlObj.toString(), { headers });
-        if (!res.ok) throw new Error('Failed');
-        const data = await res.json();
-        const tbody = table.querySelector('tbody');
-
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="100%" class="text-center">No data found</td></tr>';
-            return;
-        }
-
-        const columns = JSON.parse(table.dataset.columns || '[]');
-        const actions = JSON.parse(table.dataset.actions || '[]');
-        const schemaStr = table.dataset.schema || '[]';
-
-        const rowsHtml = data.map(row => {
-            // Render Columns
-            const colsHtml = columns.map(col => {
-                let val = row[col.key];
-                if (val === undefined || val === null) val = '-';
-
-                if (col.type === 'badge') {
-                    const mapKey = String(val);
-                    const badgeColor = (col.badge_map && col.badge_map[mapKey]) ? col.badge_map[mapKey] : (col.color || 'primary');
-                    return `<td><span class="badge bg-${badgeColor}">${val}</span></td>`;
-                }
-                if (col.truncate && typeof val === 'string' && val.length > col.truncate) {
-                    val = val.substring(0, col.truncate) + '...';
-                }
-                return `<td>${val}</td>`;
-            }).join('');
-
-            // Render Actions
-            let actionsHtml = '';
-            if (actions && actions.length > 0) {
-                const dropdownItems = actions.map(act => {
-                    if (act.action === 'modal-form') {
-                        return `<li><a class="dropdown-item" href="#" onclick="window.handleEditAction('${row.id}', '${act.action_url}', '${btoa(schemaStr)}')"><i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}</a></li>`;
-                    }
-                    if (act.action === 'api-call' && act.method === 'DELETE') {
-                        return `<li><a class="dropdown-item" href="#" onclick="window.deleteItem('${act.action_url.replace('{id}', row.id)}', '${act.confirm_message}')"><i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}</a></li>`;
-                    }
-                    return '';
-                }).join('');
-                actionsHtml = `<div class="dropdown"><button class="btn btn-soft-secondary btn-sm" data-bs-toggle="dropdown"><i class="ri-more-fill"></i></button><ul class="dropdown-menu dropdown-menu-end">${dropdownItems}</ul></div>`;
-            }
-            return `<tr>${colsHtml}<td class="py-1">${actionsHtml}</td></tr>`;
-        }).join('');
-
-        tbody.innerHTML = rowsHtml;
-
+        if (!res.ok) throw new Error('Failed to fetch data');
+        return await res.json();
     } catch (e) {
-        console.error(e);
-        const tbody = table.querySelector('tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="100%" class="text-danger">Error loading data</td></tr>';
+        console.error('Grid Data Fetch Error:', e);
+        return [];
     }
 }
 
 export async function hydrateGrids() {
     const grids = document.querySelectorAll('.js-grid-visual');
-    grids.forEach(async (table) => {
-        // 1. Initial Load
+
+    grids.forEach(async (container) => {
+        const gridId = container.id;
+        const columns = JSON.parse(container.dataset.columns || '[]');
+        const actions = JSON.parse(container.dataset.actions || '[]');
+        const schemaStr = container.dataset.schema || '[]';
+        const filtersStr = container.dataset.filters || '[]';
         const currentParams = {};
-        await fetchGridData(table, currentParams);
 
-        // 2. Setup Filters
-        const filtersStr = table.dataset.filters;
-        if (filtersStr) {
-            const filters = JSON.parse(filtersStr);
-            const container = document.getElementById(table.id + '-filters');
+        // Prepare Columns for Grid.js
+        const gridColumns = [
+            { id: 'id', name: 'ID', hidden: true }
+        ];
 
-            if (container && container.innerHTML === '') {
+        columns.forEach(col => {
+            gridColumns.push({
+                id: col.key,
+                name: col.label,
+                sort: col.sortable !== false,
+                formatter: (cell) => {
+                    if (cell === undefined || cell === null) return '-';
+                    if (col.type === 'badge') {
+                        const mapKey = String(cell);
+                        const badgeColor = (col.badge_map && col.badge_map[mapKey]) ? col.badge_map[mapKey] : (col.color || 'primary');
+                        return gridjs.html(`<span class="badge bg-${badgeColor}">${cell}</span>`);
+                    }
+                    if (col.truncate && typeof cell === 'string' && cell.length > col.truncate) {
+                        return cell.substring(0, col.truncate) + '...';
+                    }
+                    return cell;
+                }
+            });
+        });
+
+        if (actions.length > 0) {
+            gridColumns.push({
+                name: 'Actions',
+                sort: false,
+                formatter: (_, row) => {
+                    // Find ID column by its 'id' property in the gridColumns definition
+                    const idColIndex = gridColumns.findIndex(c => c.id === 'id');
+                    const rowId = row.cells[idColIndex].data;
+
+                    const dropdownItems = actions.map(act => {
+                        // Support both 'modal-form' and 'edit' as action types
+                        if (act.action === 'modal-form' || act.action === 'edit') {
+                            // If schema is already provided in the action (base64 from backend), use it.
+                            // Otherwise fallback to the main grid schema (which we encode to be safe)
+                            const schemaToPass = act.schema || btoa(schemaStr);
+                            const url = (act.url || act.action_url || '').replace('{id}', rowId);
+
+                            return `<li><a class="dropdown-item" href="javascript:void(0)" onclick="window.handleEditAction(event, '${rowId}', '${url}', '${schemaToPass}')">
+                                <i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}
+                            </a></li>`;
+                        }
+
+                        // Support 'api-call' (standard) and 'delete' (shortcut)
+                        if ((act.action === 'api-call' && act.method === 'DELETE') || act.action === 'delete') {
+                            const url = (act.url || act.action_url || '').replace('{id}', rowId);
+                            const msg = act.confirm_message || '¿Estás seguro de eliminar este registro?';
+                            return `<li><a class="dropdown-item" href="javascript:void(0)" onclick="window.deleteItem(event, '${url}', '${msg}')">
+                                <i class="${act.icon} align-bottom me-2 text-muted text-danger"></i> ${act.label}
+                            </a></li>`;
+                        }
+                        return '';
+                    }).join('');
+
+                    return gridjs.html(`
+                        <div class="dropdown">
+                            <button class="btn btn-soft-secondary btn-sm" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ri-more-fill"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                ${dropdownItems}
+                            </ul>
+                        </div>
+                    `);
+                }
+            });
+        }
+
+        const grid = new gridjs.Grid({
+            columns: gridColumns,
+            search: true,
+            sort: true,
+            pagination: { limit: 10 },
+            style: {
+                table: { 'white-space': 'nowrap' }
+            },
+            className: {
+                table: 'table table-nowrap table-sm align-middle mb-0',
+                //thead: 'table-light' // Removed to allow Velzon theme to control headers
+            },
+            data: async () => {
+                const rawData = await fetchGridDataForGridJs(container, currentParams);
+                return rawData.map(item => gridColumns.map(col => item[col.id]));
+            }
+        });
+
+        container.innerHTML = '';
+        grid.render(container);
+        window.gridInstances[gridId] = grid;
+
+        // Setup Filters - Injected into Grid.js Header
+        const filters = JSON.parse(filtersStr);
+
+        // Wait a tick for Grid.js to create the .gridjs-head
+        setTimeout(async () => {
+            const gridHead = container.querySelector('.gridjs-head');
+            if (gridHead && filters.length > 0) {
+                // Style Header as Flex
+                gridHead.style.display = 'flex';
+                gridHead.style.justifyContent = 'space-between';
+                gridHead.style.alignItems = 'center';
+                gridHead.style.gap = '15px';
+                gridHead.style.padding = '12px 12px';
+
+                // Create Filter Wrapper (Left Side)
+                const filterWrapper = document.createElement('div');
+                filterWrapper.className = 'd-flex gap-2 flex-grow-1 align-items-center';
+                gridHead.prepend(filterWrapper);
+
                 for (const filter of filters) {
-                    // Create Params Object for Filter Fetching
                     const headers = { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` };
+                    try {
+                        const r = await fetch(`${API_BASE_URL}${filter.source}`, { headers });
+                        const options = await r.json();
 
-                    // Fetch Options (e.g. /clients/simple-list)
-                    fetch(`${API_BASE_URL}${filter.source}`, { headers })
-                        .then(r => r.json())
-                        .then(options => {
-                            // Create Select
-                            const wrapper = document.createElement('div');
-                            wrapper.className = 'col-md-3';
+                        const select = document.createElement('select');
+                        select.className = 'form-select form-select-sm';
+                        select.style.width = 'auto'; // Width based on content or standard sm
+                        select.style.minWidth = '150px';
+                        select.innerHTML = `<option value="">${filter.label}</option>` +
+                            options.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
 
-                            const select = document.createElement('select');
-                            select.className = 'form-select';
-                            select.innerHTML = `<option value="">${filter.label}</option>` + options.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+                        select.addEventListener('change', async (e) => {
+                            const val = e.target.value;
+                            if (val) currentParams[filter.key] = val;
+                            else delete currentParams[filter.key];
 
-                            // Bind Change Event
-                            select.addEventListener('change', (e) => {
-                                const val = e.target.value;
-                                if (val) currentParams[filter.key] = val;
-                                else delete currentParams[filter.key];
-
-                                fetchGridData(table, currentParams);
-                            });
-
-                            wrapper.appendChild(select);
-                            container.appendChild(wrapper);
+                            grid.updateConfig({
+                                data: async () => {
+                                    const rawData = await fetchGridDataForGridJs(container, currentParams);
+                                    return rawData.map(item => gridColumns.map(col => item[col.id]));
+                                }
+                            }).forceRender();
                         });
+                        filterWrapper.appendChild(select);
+                    } catch (e) {
+                        console.error('Filter Hydration Error:', e);
+                    }
                 }
             }
-        }
+        }, 0);
     });
 }
 
@@ -689,6 +783,12 @@ function updateHeaderProfile() {
     } catch (e) {
         console.warn('Failed to update header profile:', e);
     }
+}
+
+export async function refreshGrids() {
+    Object.values(window.gridInstances).forEach(grid => {
+        grid.forceRender();
+    });
 }
 
 // Start Engine

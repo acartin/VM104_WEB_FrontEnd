@@ -80,6 +80,12 @@ async def get_sensitive_data():
     ...
 ```
 
+### Pattern C: Menu/Router Synchronization (CRITICAL)
+**Security Rule**: You must NEVER hide a menu item without also securing its target route.
+*   **IF** an entry is restricted in `menus.py` (e.g. only for "admin"),
+*   **THEN** the target `router.py` **MUST** have an equivalent `Depends(RoleChecker(["admin"]))` guard.
+*   *Auditing*: A button visible to a user but blocked by the backend is a bad UX. A button hidden but accessible via API is a Security Vulnerability.
+
 ### Middleware
 Global middleware (CORS, Logging) belongs in `main.py`. Feature-specific middleware should be implemented as a Dependency.
 

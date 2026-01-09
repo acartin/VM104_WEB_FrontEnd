@@ -24,6 +24,7 @@ class PromptRow(PromptBase):
     """Schema for Grid Display"""
     id: UUID
     client_name: Optional[str] = None # For Admin view
+    client_id: Optional[UUID] = None
     updated_at: Optional[datetime]
     
     class Config:

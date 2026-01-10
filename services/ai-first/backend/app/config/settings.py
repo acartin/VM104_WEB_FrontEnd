@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     db_username: str
     db_password: str
     db_connection: str = "pgsql" # Default from .env
+    
+    # Security
+    allowed_origins: str = "*" # Comma separated list of origins
 
     @property
     def database_url(self) -> str:

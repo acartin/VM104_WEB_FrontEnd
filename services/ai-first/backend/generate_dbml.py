@@ -46,8 +46,6 @@ async def generate_dbml():
                 settings = []
                 if col.column_name in pks:
                     settings.append("pk")
-                if col.is_nullable == 'NO':
-                    settings.append("not null")
                 
                 settings_str = f" [{', '.join(settings)}]" if settings else ""
                 
@@ -55,6 +53,7 @@ async def generate_dbml():
                 curr_type = col.data_type
                 if curr_type == 'character varying': curr_type = 'varchar'
                 if curr_type == 'timestamp with time zone': curr_type = 'timestamp'
+                if curr_type == 'timestamp without time zone': curr_type = 'timestamp'
                 
                 dbml_output.append(f"  {col.column_name} {curr_type}{settings_str}")
             

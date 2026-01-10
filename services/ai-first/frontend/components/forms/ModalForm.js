@@ -30,6 +30,11 @@ export function renderInput(label, name, value = '', type = 'text', required = f
     const maxLength = validation.max_length ? `maxlength="${validation.max_length}"` : '';
     const pattern = validation.pattern ? `pattern="${validation.pattern}"` : '';
 
+    // Hidden Input Optimization
+    if (type === 'hidden') {
+        return `<input type="hidden" id="${name}" name="${name}" value="${value}">`;
+    }
+
     if (type === 'textarea') {
         return `
             <div class="mb-3">
@@ -44,11 +49,11 @@ export function renderInput(label, name, value = '', type = 'text', required = f
         const isChecked = (value === true || value === 'true' || value === '1');
         const checkedStr = isChecked ? 'checked' : '';
         const roleSwitch = type === 'switch' ? 'role="switch"' : '';
-        // Dynamic Color: Success if checked, Danger if unchecked
-        const colorClass = isChecked ? 'form-switch-success' : 'form-switch-danger';
+        // Dynamic Color: Success (green) if checked, Secondary (gray) if unchecked
+        const colorClass = isChecked ? 'form-switch-success' : 'form-switch-secondary';
 
-        // Toggle Logic script
-        const toggleScript = `this.closest('.form-check').classList.remove('form-switch-success', 'form-switch-danger'); this.closest('.form-check').classList.add(this.checked ? 'form-switch-success' : 'form-switch-danger');`;
+        // Toggle Logic script: switches between success and secondary
+        const toggleScript = `this.closest('.form-check').classList.remove('form-switch-success', 'form-switch-secondary'); this.closest('.form-check').classList.add(this.checked ? 'form-switch-success' : 'form-switch-secondary');`;
 
         return `
             <div class="mb-3 form-check form-switch ${colorClass}">
@@ -77,6 +82,66 @@ export function renderInput(label, name, value = '', type = 'text', required = f
         `;
     }
 
+    if (type === 'repeater') {
+        const sourceUrl = validation.source || '';
+        const items = Array.isArray(value) ? value : [];
+        const itemsHtml = items.map((item, index) => `
+            <div class="repeater-item d-flex gap-2 mb-2 align-items-center" data-index="${index}">
+                <select class="form-select form-select-sm category-select" style="width: 140px;" data-source="${sourceUrl}" data-value="${item.category_id || ''}">
+                    <option value="">Category...</option>
+                </select>
+                <input type="text" class="form-control form-control-sm value-input" placeholder="Value..." value="${item.value || ''}">
+                <div class="form-check form-check-inline mb-0">
+                    <input class="form-check-input primary-radio" type="radio" name="${name}_primary" ${item.is_primary ? 'checked' : ''} title="Set as Primary">
+                </div>
+                <button type="button" class="btn btn-ghost-danger btn-icon btn-sm remove-item" onclick="this.closest('.repeater-item').remove()">
+                    <i class="ri-delete-bin-line"></i>
+                </button>
+            </div>
+        `).join('');
+
+        return `
+            <div class="mb-3 repeater-container" id="repeater-${name}" data-name="${name}">
+                <label class="form-label d-flex justify-content-between align-items-center">
+                    ${label}
+                    <button type="button" class="btn btn-soft-primary btn-sm add-item" onclick="window.addRepeaterItem('${name}', '${sourceUrl}')">
+                        <i class="ri-add-line align-bottom"></i> Add
+                    </button>
+                </label>
+                <div class="repeater-list">
+                    ${itemsHtml}
+                </div>
+                <input type="hidden" name="${name}" id="input-${name}">
+            </div>
+            <script>
+                // Self-contained logic for adding items if not already globally defined
+                if (!window.addRepeaterItem) {
+                    window.addRepeaterItem = (name, source) => {
+                        const container = document.querySelector(\`#repeater-\${name} .repeater-list\`);
+                        const itemHtml = \`
+                            <div class="repeater-item d-flex gap-2 mb-2 align-items-center">
+                                <select class="form-select form-select-sm category-select" style="width: 140px;" data-source="\${source}">
+                                    <option value="">Category...</option>
+                                </select>
+                                <input type="text" class="form-control form-control-sm value-input" placeholder="Value...">
+                                <div class="form-check form-check-inline mb-0">
+                                    <input class="form-check-input primary-radio" type="radio" name="\${name}_primary">
+                                </div>
+                                <button type="button" class="btn btn-ghost-danger btn-icon btn-sm remove-item" onclick="this.closest('.repeater-item').remove()">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        \`;
+                        container.insertAdjacentHTML('beforeend', itemHtml);
+                        // Hydrate the newly added select
+                        const newSelect = container.lastElementChild.querySelector('.category-select');
+                        if (window.hydrateSelect) window.hydrateSelect(newSelect);
+                    };
+                }
+            </script>
+        `;
+    }
+
     return `
         <div class="mb-3">
             <label for="${name}" class="form-label">${label}</label>
@@ -90,7 +155,14 @@ export function renderInput(label, name, value = '', type = 'text', required = f
 export function renderFormFromSchema(schema, data = {}) {
     if (!Array.isArray(schema)) return '';
     return schema.map(field => {
-        const val = data[field.name] || '';
+        // Prioritize data[name] (edit mode), then field.value (schema default), then empty
+        let val = '';
+        if (data[field.name] !== undefined && data[field.name] !== null) {
+            val = data[field.name];
+        } else if (field.value !== undefined) {
+            val = field.value;
+        }
+
         // Pass validation rules if present in field definition
         const validation = {
             min_length: field.min_length,

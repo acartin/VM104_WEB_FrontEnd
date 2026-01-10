@@ -39,4 +39,6 @@ class UIAppShell(BaseModel):
 class WebIAFirstResponse(BaseModel):
     # This might be deprecated or used for partial updates, but for app-init we'll use UIAppShell
     layout: str
-    components: List[UIComponent]
+    components: Optional[List[UIComponent]] = None
+    properties: Optional[dict] = None
+    tabs: Optional[List[dict]] = None

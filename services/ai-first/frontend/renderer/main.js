@@ -11,11 +11,40 @@ import { LinkButtonGroup } from '../components/ui/ButtonGroup.js';
 import { LinkSidebar } from '../components/layout/Sidebar.js';
 import { LinkNavbar } from '../components/layout/Navbar.js';
 import { LinkGridVisual } from '../components/grids/GridVisual.js';
+import { LinkTabs } from '../components/ui/Tabs.js';
 import { LinkModalForm, renderInput, renderFormFromSchema } from '../components/forms/ModalForm.js';
+import { LinkRow, LinkCol } from '../components/layout/Layout.js';
+import { LinkProjectBanner } from '../components/layout/ProjectBanner.js';
+import { LinkMemberListCard, LinkGenericCard, LinkFileGrid, LinkContactListDetailed } from '../components/cards/DashboardWidgets.js?v=52';
 
 const API_BASE_URL = window.AppConfig.API_BASE_URL; // Loaded from config.js
 
-// --- STATE MANAGEMENT ---
+const RENDERER_VERSION = "54";
+console.log(`[Renderer] v${RENDERER_VERSION} Initializing...`);
+
+// Safe UTF-8 Base64 Encode
+function safeBtoa(str) {
+    try {
+        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
+            return String.fromCharCode('0x' + p1);
+        }));
+    } catch (e) {
+        return btoa(str);
+    }
+}
+
+// Safe UTF-8 Base64 Decode
+function safeAtob(str) {
+    try {
+        return decodeURIComponent(atob(str).split('').map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    } catch (e) {
+        // Fallback for non-UTF8 base64
+        return atob(str);
+    }
+}
+
 window.appState = {
     currentPath: null
 };
@@ -136,10 +165,40 @@ export async function navigateTo(href, pushState = true) {
         const viewData = await response.json();
 
         // Render New Content
-        if (viewData.components) {
+        if (viewData.layout === 'dashboard-project-overview') {
+            const bannerHtml = LinkProjectBanner(viewData);
+
+            let tabsContentHtml = '';
+            if (viewData.tabs) {
+                tabsContentHtml = viewData.tabs.map(tab => {
+                    const activeClass = tab.active ? 'show active' : '';
+                    const content = renderContent(tab.components);
+                    return `
+                        <div class="tab-pane fade ${activeClass}" id="${tab.id}" role="tabpanel">
+                            ${content}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                // Fallback for legacy single-view
+                const contentHtml = renderContent(viewData.components);
+                tabsContentHtml = `
+                    <div class="tab-pane fade show active" id="project-overview" role="tabpanel">
+                        ${contentHtml}
+                    </div>
+                `;
+            }
+
+            pageRoot.innerHTML = `
+                ${bannerHtml}
+                <div class="tab-content text-muted mt-3">
+                    ${tabsContentHtml}
+                </div>
+            `;
+        } else if (viewData.components) {
             pageRoot.innerHTML = renderContent(viewData.components);
-            hydrateGrids();
         }
+        hydrateGrids();
 
         // Update URL without reload (History API)
         if (pushState) {
@@ -167,6 +226,22 @@ export function renderComponent(component) {
             return LinkTypography(component);
         case 'button-group':
             return LinkButtonGroup(component);
+        case 'tabs':
+            return LinkTabs(component);
+        case 'layout-row':
+            return LinkRow(component);
+        case 'layout-col':
+            return LinkCol(component);
+        case 'contact-list-detailed':
+            return LinkContactListDetailed(component);
+        case 'member-list-card':
+            return LinkMemberListCard(component);
+        case 'file-grid':
+            return LinkFileGrid(component);
+        case 'card':
+            // Recursive rendering for generic card content
+            const contentHtml = renderContent(component.components);
+            return LinkGenericCard({ ...component, contentHtml });
         default:
             return `<!-- Unknown: ${component.type} -->`;
     }
@@ -253,9 +328,30 @@ window.submitModalForm = async (formId, actionUrl, method) => {
 
     // Explicitly handle checkboxes (booleans)
     // Because unchecked checkboxes are missing from FormData
-    const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+    const checkboxes = form.querySelectorAll('input[type="checkbox"]:not(.primary-radio)');
     checkboxes.forEach(cb => {
         payload[cb.name] = cb.checked;
+    });
+
+    // Handle Repeater Fields
+    const repeaters = form.querySelectorAll('.repeater-container');
+    repeaters.forEach(rep => {
+        const name = rep.dataset.name;
+        const items = [];
+        const rows = rep.querySelectorAll('.repeater-item');
+        rows.forEach(row => {
+            const catId = row.querySelector('.category-select').value;
+            const val = row.querySelector('.value-input').value;
+            const isPrimary = row.querySelector('.primary-radio').checked;
+            if (catId && val) {
+                items.push({
+                    category_id: parseInt(catId),
+                    value: val,
+                    is_primary: isPrimary
+                });
+            }
+        });
+        payload[name] = items;
     });
 
     try {
@@ -387,17 +483,7 @@ window.deleteItem = async (event, url, confirmMsg) => {
 };
 
 
-// Safe UTF-8 Base64 Decode
-function safeAtob(str) {
-    try {
-        return decodeURIComponent(atob(str).split('').map(function (c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-    } catch (e) {
-        // Fallback for non-UTF8 base64
-        return atob(str);
-    }
-}
+// (Moved to top)
 
 // Generic Modal Opener
 window.openGenericModal = async (schema, url, method, title, data = {}) => {
@@ -419,34 +505,62 @@ window.openGenericModal = async (schema, url, method, title, data = {}) => {
         modalContainer.remove();
     });
 
-    // Hydrate Selects
-    hydrateModalSelects(modalEl);
+    // Initial Hydration
+    await hydrateModalSelects(modalEl);
+};
+
+window.hydrateSelect = async (select) => {
+    const url = select.dataset.source;
+    if (!url) return;
+    const initialValue = select.dataset.value;
+
+    try {
+        const token = localStorage.getItem('access_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch(`${API_BASE_URL}${url}`, { headers });
+        const items = await res.json();
+
+        // Clear and populate
+        const placeholder = select.querySelector('option[value=""]') ? select.querySelector('option[value=""]').innerText : 'Select...';
+        select.innerHTML = `<option value="">${placeholder}</option>`;
+
+        items.forEach(item => {
+            const selected = (String(item.id) === String(initialValue)) ? 'selected' : '';
+            select.insertAdjacentHTML('beforeend', `<option value="${item.id}" ${selected}>${item.name || item.label}</option>`);
+        });
+    } catch (e) {
+        console.error('Error hydrating select:', e);
+    }
 };
 
 async function hydrateModalSelects(modalEl) {
     const selects = modalEl.querySelectorAll('select[data-source]');
-    selects.forEach(async (select) => {
-        const url = select.dataset.source;
-        const initialValue = select.dataset.value;
-
-        try {
-            const token = localStorage.getItem('access_token');
-            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-            const res = await fetch(`${API_BASE_URL}${url}`, { headers });
-            const options = await res.json();
-
-            // Rebuild Options
-            const optsHtml = options.map(opt => {
-                const isSel = (String(opt.id) === String(initialValue)) ? 'selected' : '';
-                return `<option value="${opt.id}" ${isSel}>${opt.name}</option>`;
-            }).join('');
-
-            select.innerHTML = '<option value="">Select...</option>' + optsHtml;
-        } catch (e) {
-            console.error('Failed to hydration select', e);
-        }
-    });
+    for (const select of selects) {
+        await window.hydrateSelect(select);
+    }
 }
+
+// Global helper for repeater items
+window.addRepeaterItem = async (name, source) => {
+    const container = document.querySelector(`#repeater-${name} .repeater-list`);
+    const itemHtml = `
+        <div class="repeater-item d-flex gap-2 mb-2 align-items-center">
+            <select class="form-select form-select-sm category-select" style="width: 140px;" data-source="${source}">
+                <option value="">Category...</option>
+            </select>
+            <input type="text" class="form-control form-control-sm value-input" placeholder="Value...">
+            <div class="form-check form-check-inline mb-0">
+                <input class="form-check-input primary-radio" type="radio" name="${name}_primary">
+            </div>
+            <button type="button" class="btn btn-ghost-danger btn-icon btn-sm remove-item" onclick="this.closest('.repeater-item').remove()">
+                <i class="ri-delete-bin-line"></i>
+            </button>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', itemHtml);
+    const newSelect = container.lastElementChild.querySelector('.category-select');
+    await window.hydrateSelect(newSelect);
+};
 
 // Generic Edit Handler (Fetch + Open Modal)
 window.handleEditAction = async (event, id, urlPattern, schemaStr) => {
@@ -593,10 +707,23 @@ export async function hydrateGrids() {
                         if (act.action === 'modal-form' || act.action === 'edit') {
                             // If schema is already provided in the action (base64 from backend), use it.
                             // Otherwise fallback to the main grid schema (which we encode to be safe)
-                            const schemaToPass = act.schema || btoa(schemaStr);
+                            let schemaToPass = "";
+                            if (act.schema) {
+                                schemaToPass = (typeof act.schema === 'string') ? act.schema : safeBtoa(JSON.stringify(act.schema));
+                            } else {
+                                schemaToPass = btoa(schemaStr);
+                            }
+
                             const url = (act.url || act.action_url || '').replace('{id}', rowId);
 
                             return `<li><a class="dropdown-item" href="javascript:void(0)" onclick="window.handleEditAction(event, '${rowId}', '${url}', '${schemaToPass}')">
+                                <i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}
+                            </a></li>`;
+                        }
+
+                        if (act.action === 'navigate') {
+                            const url = (act.url || act.action_url || '').replace('{id}', rowId);
+                            return `<li><a class="dropdown-item" href="${url}">
                                 <i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}
                             </a></li>`;
                         }
@@ -786,9 +913,13 @@ function updateHeaderProfile() {
 }
 
 export async function refreshGrids() {
-    Object.values(window.gridInstances).forEach(grid => {
-        grid.forceRender();
-    });
+    const grids = Object.values(window.gridInstances);
+    if (grids.length > 0) {
+        grids.forEach(grid => grid.forceRender());
+    } else {
+        // If no grids (e.g. Dashboard View), reload the whole view
+        await navigateTo(window.location.pathname);
+    }
 }
 
 // Start Engine

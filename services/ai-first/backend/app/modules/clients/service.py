@@ -1,6 +1,6 @@
 from sqlalchemy import text
 from app.dal.database import engine
-from .schemas import ClientRow, ClientCreate, ClientUpdate, ClientSimple
+from .schemas import ClientRow, ClientCreate, ClientUpdate, ClientSimple, ClientStats, DocumentRow
 from typing import List, Optional
 from uuid import UUID
 import uuid
@@ -27,7 +27,7 @@ class ClientService:
 
     async def get_client(self, client_id: UUID) -> Optional[ClientRow]:
         query = text("""
-            SELECT c.id, c.name, c.country_id, lc.name as country_name 
+            SELECT c.id, c.name, c.country_id, c.created_at, lc.name as country_name 
             FROM lead_clients c
             LEFT JOIN lead_countries lc ON c.country_id = lc.id
             WHERE c.id = :id
@@ -36,7 +36,13 @@ class ClientService:
             result = await conn.execute(query, {"id": client_id})
             row = result.fetchone()
             if row:
-                return ClientRow(id=row.id, name=row.name, country_id=row.country_id or 0, country_name=row.country_name)
+                return ClientRow(
+                    id=row.id, 
+                    name=row.name, 
+                    country_id=row.country_id or 0, 
+                    country_name=row.country_name,
+                    created_at=row.created_at
+                )
             return None
 
     async def create_client(self, client: ClientCreate) -> ClientRow:
@@ -86,5 +92,35 @@ class ClientService:
         async with engine.begin() as conn:
             await conn.execute(query, {"id": client_id})
             return True
+
+    async def get_client_stats(self, client_id: UUID) -> ClientStats:
+        query_leads = text("SELECT COUNT(*) FROM lead_leads WHERE client_id = :id")
+        query_props = text("SELECT COUNT(*) FROM lead_properties WHERE client_id = :id")
+        
+        async with engine.connect() as conn:
+            leads = await conn.execute(query_leads, {"id": client_id})
+            props = await conn.execute(query_props, {"id": client_id})
+            
+            return ClientStats(
+                total_leads=leads.scalar() or 0,
+                total_properties=props.scalar() or 0
+            )
+
+    async def get_client_documents(self, client_id: UUID) -> List[DocumentRow]:
+        query = text("""
+            SELECT id, filename, created_at, sync_status
+            FROM lead_knowledge_documents
+            WHERE client_id = :id
+            ORDER BY created_at DESC
+        """)
+        async with engine.connect() as conn:
+            result = await conn.execute(query, {"id": client_id})
+            rows = result.fetchall()
+            return [DocumentRow(
+                id=r.id, 
+                filename=r.filename, 
+                created_at=r.created_at, 
+                sync_status=r.sync_status
+            ) for r in rows]
 
 service = ClientService()

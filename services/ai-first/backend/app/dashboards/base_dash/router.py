@@ -1,21 +1,19 @@
 from fastapi import APIRouter, Depends
-from app.contracts.ui_schema import UIAppShell
+from app.contracts.ui_schema import WebIAFirstResponse, UIAppShell
 from .menus import get_menu_for_role
 from app.modules.auth.config import current_active_user
 from app.modules.auth.models import User
+from app.modules.auth.utils import get_current_role_slug
 
 router = APIRouter()
 
 @router.get("/app-init", response_model=UIAppShell)
 async def app_init(user: User = Depends(current_active_user)):
     """
-    Returns the initial application shell structure: Sidebar + Initial Content.
-    Dynamic based on User Role.
+    Returns the initial application shell structure.
+    In the decentralized model, this provides the global shell.
+    Navigation to specific dashboards is handled by menu links.
     """
-    # 1. Determine Role
-    # For MVP, we take the role from the FIRST tenant connection.
-    # In future, this could come from a 'X-Tenant-ID' header context.
-    from app.modules.auth.utils import get_current_role_slug
     current_role = get_current_role_slug(user)
     
     # 2. Get Menu
@@ -38,9 +36,27 @@ async def app_init(user: User = Depends(current_active_user)):
         ]
     }
 
-# We can keep check-contract here if it's dashboard related, or move to a 'core' module. 
-# For now, let's keep it here as it validates the shell components.
-from app.contracts.ui_schema import WebIAFirstResponse
+@router.get("/base", response_model=WebIAFirstResponse)
+async def get_base_dashboard(user: User = Depends(current_active_user)):
+    """
+    The standard Landing Dashboard for the system.
+    """
+    current_role = get_current_role_slug(user)
+    
+    return {
+        "layout": "dashboard-standard",
+        "components": [
+            {
+                "type": "grid",
+                "components": [
+                    {"type": "typography", "tag": "h2", "text": "Dashboard General", "class": "mb-4"},
+                    {"type": "card-metric", "label": "Resumen de Actividad", "value": "Sincronizado", "color": "success"},
+                    {"type": "typography", "tag": "p", "text": f"Estás visualizando el dashboard base con el rol {current_role}.", "color": "muted"}
+                ]
+            }
+        ],
+        "permissions_required": ["dashboard.view"]
+    }
 
 @router.get("/check-contract", response_model=WebIAFirstResponse)
 async def validate_ia_guard():

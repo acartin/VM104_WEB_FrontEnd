@@ -31,3 +31,13 @@ class ClientUpdate(BaseModel):
     """Schema for Update Form"""
     name: Optional[str] = Field(None, min_length=2)
     country_id: Optional[int] = Field(None)
+
+class ClientStats(BaseModel):
+    total_leads: int
+    total_properties: int
+
+class DocumentRow(BaseModel):
+    id: int
+    filename: str
+    created_at: Optional[datetime]
+    sync_status: str

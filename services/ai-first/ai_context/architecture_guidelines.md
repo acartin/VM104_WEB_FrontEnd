@@ -160,12 +160,22 @@ We use a **Decoupled Strategy** to manage configuration:
 ## 9. Deployment & Environment Context
 This project runs within a structured Docker environment. It is CRITICAL to execute commands (e.g., Python scripts, Database migrations) within the appropriate container.
 
-### 9.1 Container Strategy
-*   **Backend API**: `prd-web-aifirst-api-01`
-    *   **Path**: `/app`
-    *   **Execution**: `docker exec -it prd-web-aifirst-api-01 python [script.py]`
-*   **Static Frontend**: `prd-web-aifirst-static-01`
-    *   **Path**: `/usr/share/nginx/html`
+### 9.1 Container Service Map
+(Reference: `ai_context/docker-compose.reference.yml`)
+
+The infrastructure is composed of the following Docker services running on the `web-internal` network:
+
+| Service Name | Container Name | Port (Host:Container) | Function | Volume Path (Container) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Backend API** | `prd-web-aifirst-api-01` | **8084**:8000 | FastAPI Backend (Uvicorn) | `/app` |
+| **Frontend** | `prd-web-aifirst-static-01` | **8085**:80 | Nginx Static Host | `/usr/share/nginx/html` |
+| **Admin Console** | `prd-web-admin-nginx-01` | **8083**:80 | Legacy Admin Panel | `/var/www/public` |
+| **Chat Client** | `prd-web-chat-client-01` | **8082**:80 | Chat Interface | `/usr/share/nginx/html` |
+
+### 9.2 Execution Rules
+*   **Backend Commands**: ALWAYS run inside the container.
+    *   `docker exec -it prd-web-aifirst-api-01 python [script.py]`
+*   **Frontend Assets**: Located in `/srv/web/services/ai-first/frontend` (Host) mapped to `/usr/share/nginx/html` (Container).
 
 ### 9.2 Legacy Authentication Schema
 For Phase 1 Authentication integration, we connect to the existing User/Tenant tables located in the same database.

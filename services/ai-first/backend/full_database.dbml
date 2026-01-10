@@ -1,145 +1,146 @@
 Table admin_sessions {
-  id varchar [pk, not null]
+  id varchar [pk]
   user_id uuid
   ip_address varchar
   user_agent text
-  payload text [not null]
-  last_activity integer [not null]
+  payload text
+  last_activity integer
 }
 
 Table app_sessions {
-  id varchar [pk, not null]
+  id varchar [pk]
   user_id uuid
   ip_address varchar
   user_agent text
-  payload text [not null]
-  last_activity integer [not null]
+  payload text
+  last_activity integer
 }
 
 Table auth_client_user {
-  id uuid [pk, not null]
-  user_id uuid [not null]
-  client_id uuid [not null]
-  role_id uuid [not null]
+  id uuid [pk]
+  user_id uuid
+  client_id uuid
+  role_id uuid
 }
 
 Table auth_roles {
-  id uuid [pk, not null]
-  name varchar [not null]
-  slug varchar [not null]
+  id uuid [pk]
+  name varchar
+  slug varchar
 }
 
 Table auth_users {
   name varchar
-  id uuid [pk, not null]
-  email varchar [not null]
-  hashed_password varchar [not null]
-  is_active boolean [not null]
-  is_superuser boolean [not null]
-  is_verified boolean [not null]
+  id uuid [pk]
+  email varchar
+  hashed_password varchar
+  is_active boolean
+  is_superuser boolean
+  is_verified boolean
+  contact_id uuid
 }
 
 Table cache {
-  key varchar [pk, not null]
-  value text [not null]
-  expiration integer [not null]
+  key varchar [pk]
+  value text
+  expiration integer
 }
 
 Table cache_locks {
-  key varchar [pk, not null]
-  owner varchar [not null]
-  expiration integer [not null]
+  key varchar [pk]
+  owner varchar
+  expiration integer
 }
 
 Table failed_jobs {
-  id bigint [pk, not null]
-  uuid varchar [not null]
-  connection text [not null]
-  queue text [not null]
-  payload text [not null]
-  exception text [not null]
-  failed_at timestamp without time zone [not null]
+  id bigint [pk]
+  uuid varchar
+  connection text
+  queue text
+  payload text
+  exception text
+  failed_at timestamp
 }
 
 Table filament_model_has_permissions {
-  permission_id bigint [pk, not null]
-  model_type varchar [pk, not null]
-  model_id uuid [pk, not null]
+  permission_id bigint [pk]
+  model_type varchar [pk]
+  model_id uuid [pk]
 }
 
 Table filament_model_has_roles {
-  role_id bigint [pk, not null]
-  model_type varchar [pk, not null]
-  model_id uuid [pk, not null]
+  role_id bigint [pk]
+  model_type varchar [pk]
+  model_id uuid [pk]
 }
 
 Table filament_password_reset_tokens {
-  email varchar [pk, not null]
-  token varchar [not null]
-  created_at timestamp without time zone
+  email varchar [pk]
+  token varchar
+  created_at timestamp
 }
 
 Table filament_permissions {
-  id bigint [pk, not null]
-  name varchar [not null]
-  guard_name varchar [not null]
-  created_at timestamp without time zone
-  updated_at timestamp without time zone
+  id bigint [pk]
+  name varchar
+  guard_name varchar
+  created_at timestamp
+  updated_at timestamp
 }
 
 Table filament_role_has_permissions {
-  permission_id bigint [pk, not null]
-  role_id bigint [pk, not null]
+  permission_id bigint [pk]
+  role_id bigint [pk]
 }
 
 Table filament_roles {
-  id bigint [pk, not null]
-  name varchar [not null]
-  guard_name varchar [not null]
-  created_at timestamp without time zone
-  updated_at timestamp without time zone
+  id bigint [pk]
+  name varchar
+  guard_name varchar
+  created_at timestamp
+  updated_at timestamp
 }
 
 Table job_batches {
-  id varchar [pk, not null]
-  name varchar [not null]
-  total_jobs integer [not null]
-  pending_jobs integer [not null]
-  failed_jobs integer [not null]
-  failed_job_ids text [not null]
+  id varchar [pk]
+  name varchar
+  total_jobs integer
+  pending_jobs integer
+  failed_jobs integer
+  failed_job_ids text
   options text
   cancelled_at integer
-  created_at integer [not null]
+  created_at integer
   finished_at integer
 }
 
 Table jobs {
-  id bigint [pk, not null]
-  queue varchar [not null]
-  payload text [not null]
-  attempts smallint [not null]
+  id bigint [pk]
+  queue varchar
+  payload text
+  attempts smallint
   reserved_at integer
-  available_at integer [not null]
-  created_at integer [not null]
+  available_at integer
+  created_at integer
 }
 
 Table lead_ai_prompts {
-  id uuid [pk, not null]
+  id uuid [pk]
   client_id uuid
-  slug text [not null]
-  prompt_text text [not null]
+  slug text
+  prompt_text text
   is_active boolean
-  created_at timestamp without time zone
-  updated_at timestamp without time zone
-  deleted_at timestamp without time zone
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
 }
 
 Table lead_appointments {
-  id uuid [pk, not null]
-  lead_id uuid [not null]
+  id uuid [pk]
+  lead_id uuid
   property_id uuid
-  contact_id uuid [not null]
-  scheduled_at timestamp [not null]
+  contact_id uuid
+  scheduled_at timestamp
   duration_minutes smallint
   timezone varchar
   meeting_type varchar
@@ -150,33 +151,34 @@ Table lead_appointments {
 }
 
 Table lead_channel_categories {
-  id integer [pk, not null]
-  name varchar [not null]
+  id integer [pk]
+  name varchar
+  icon varchar
 }
 
 Table lead_client_channels {
-  id uuid [pk, not null]
-  client_id uuid [not null]
-  channel_id integer [not null]
-  value varchar [not null]
-  internal_name varchar [not null]
+  id uuid [pk]
+  client_id uuid
+  channel_id integer
+  value varchar
+  internal_name varchar
   created_at timestamp
   updated_at timestamp
   deleted_at timestamp
 }
 
 Table lead_client_user {
-  id uuid [pk, not null]
-  client_id uuid [not null]
-  user_id uuid [not null]
-  created_at timestamp without time zone
-  updated_at timestamp without time zone
+  id uuid [pk]
+  client_id uuid
+  user_id uuid
+  created_at timestamp
+  updated_at timestamp
 }
 
 Table lead_clients {
-  id uuid [pk, not null]
-  name varchar [not null]
-  country_id integer [not null]
+  id uuid [pk]
+  name varchar
+  country_id integer
   created_at timestamp
   updated_at timestamp
   deleted_at timestamp
@@ -184,26 +186,27 @@ Table lead_clients {
 }
 
 Table lead_communication_channels {
-  id integer [pk, not null]
-  name varchar [not null]
+  id integer [pk]
+  name varchar
   icon varchar
   active boolean
+  category_id integer
 }
 
 Table lead_contact_methods {
-  id uuid [pk, not null]
-  user_id uuid [not null]
-  channel_id integer [not null]
-  value varchar [not null]
+  id uuid [pk]
+  user_id uuid
+  channel_id integer
+  value varchar
   label varchar
   is_primary boolean
   updated_at timestamp
 }
 
 Table lead_contact_preferences {
-  id uuid [pk, not null]
-  slug varchar [not null]
-  name varchar [not null]
+  id uuid [pk]
+  slug varchar
+  name varchar
   icon varchar
   color varchar
   active boolean
@@ -212,77 +215,77 @@ Table lead_contact_preferences {
 }
 
 Table lead_conversations {
-  id uuid [pk, not null]
-  lead_id uuid [not null]
-  platform varchar [not null]
+  id uuid [pk]
+  lead_id uuid
+  platform varchar
   conversation_id varchar
-  messages jsonb [not null]
+  messages jsonb
   summary text
   sentiment varchar
-  started_at timestamp without time zone
-  ended_at timestamp without time zone
-  last_message_at timestamp without time zone
+  started_at timestamp
+  ended_at timestamp
+  last_message_at timestamp
   total_messages integer
   bot_messages integer
   lead_messages integer
-  created_at timestamp without time zone
-  updated_at timestamp without time zone
-  deleted_at timestamp without time zone
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
 }
 
 Table lead_countries {
-  id integer [pk, not null]
-  name varchar [not null]
-  iso_code character [not null]
+  id integer [pk]
+  name varchar
+  iso_code character
   updated_at timestamp
 }
 
 Table lead_currencies {
-  id character [pk, not null]
-  symbol varchar [not null]
+  id character [pk]
+  symbol varchar
   updated_at timestamp
 }
 
 Table lead_integrations {
-  id uuid [pk, not null]
-  client_id uuid [not null]
-  provider varchar [not null]
-  name varchar [not null]
-  credentials text [not null]
-  status boolean [not null]
+  id uuid [pk]
+  client_id uuid
+  provider varchar
+  name varchar
+  credentials text
+  status boolean
   settings json
-  created_at timestamp without time zone
-  updated_at timestamp without time zone
+  created_at timestamp
+  updated_at timestamp
 }
 
 Table lead_knowledge_documents {
-  id bigint [pk, not null]
-  client_id uuid [not null]
-  filename varchar [not null]
-  storage_path varchar [not null]
+  id bigint [pk]
+  client_id uuid
+  filename varchar
+  storage_path varchar
   content_hash varchar
   sync_status varchar
-  last_synced_at timestamp without time zone
-  created_at timestamp without time zone
+  last_synced_at timestamp
+  created_at timestamp
   error_message text
 }
 
 Table lead_leads {
-  id uuid [pk, not null]
-  client_id uuid [not null]
-  source_id bigint [not null]
+  id uuid [pk]
+  client_id uuid
+  source_id bigint
   origin_channel_id uuid
   assigned_user_id uuid
-  full_name varchar [not null]
+  full_name varchar
   email varchar
   phone varchar
   declared_income numeric
   current_debts numeric
   financial_currency_id character
   status varchar
-  created_at timestamp without time zone
-  updated_at timestamp without time zone
-  deleted_at timestamp without time zone
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
   score_engagement integer
   score_finance integer
   score_timeline integer
@@ -315,11 +318,11 @@ Table lead_leads {
 }
 
 Table lead_properties {
-  id uuid [pk, not null]
-  client_id uuid [not null]
-  property_type_id integer [not null]
+  id uuid [pk]
+  client_id uuid
+  property_type_id integer
   assigned_contact_id uuid
-  title varchar [not null]
+  title varchar
   description text
   address_street varchar
   address_city varchar
@@ -331,8 +334,8 @@ Table lead_properties {
   bathrooms numeric
   area_sqm numeric
   features jsonb
-  price numeric [not null]
-  currency_id character [not null]
+  price numeric
+  currency_id character
   status varchar
   created_at timestamp
   updated_at timestamp
@@ -342,43 +345,43 @@ Table lead_properties {
 }
 
 Table lead_property_types {
-  id integer [pk, not null]
-  name varchar [not null]
+  id integer [pk]
+  name varchar
 }
 
 Table lead_scoring_definitions {
-  id bigint [pk, not null]
-  criterion varchar [not null]
-  min_score integer [not null]
-  max_score integer [not null]
-  label varchar [not null]
-  meaning text [not null]
+  id bigint [pk]
+  criterion varchar
+  min_score integer
+  max_score integer
+  label varchar
+  meaning text
   icon varchar
-  color varchar [not null]
-  is_active boolean [not null]
+  color varchar
+  is_active boolean
 }
 
 Table lead_sources {
-  id integer [pk, not null]
-  name varchar [not null]
-  type varchar [not null]
+  id integer [pk]
+  name varchar
+  type varchar
   icon varchar
 }
 
 Table lead_status_history {
-  id uuid [pk, not null]
-  lead_id uuid [not null]
+  id uuid [pk]
+  lead_id uuid
   old_status varchar
-  new_status varchar [not null]
+  new_status varchar
   changed_by uuid
   notes text
   changed_at timestamp
 }
 
 Table lead_statuses {
-  id uuid [pk, not null]
-  key varchar [not null]
-  name varchar [not null]
+  id uuid [pk]
+  key varchar
+  name varchar
   icon varchar
   color varchar
   order integer
@@ -387,34 +390,34 @@ Table lead_statuses {
 }
 
 Table lead_users {
-  id uuid [pk, not null]
-  name varchar [not null]
-  email varchar [not null]
-  email_verified_at timestamp without time zone
-  password varchar [not null]
+  id uuid [pk]
+  name varchar
+  email varchar
+  email_verified_at timestamp
+  password varchar
   remember_token varchar
-  created_at timestamp without time zone
-  updated_at timestamp without time zone
+  created_at timestamp
+  updated_at timestamp
   job_title varchar
-  available_status varchar [not null]
+  available_status varchar
   can_receive_leads boolean
   theme varchar
   theme_color varchar
 }
 
 Table migrations {
-  id integer [pk, not null]
-  migration varchar [not null]
-  batch integer [not null]
+  id integer [pk]
+  migration varchar
+  batch integer
 }
 
 Table sessions {
-  id varchar [pk, not null]
+  id varchar [pk]
   user_id uuid
   ip_address varchar
   user_agent text
-  payload text [not null]
-  last_activity integer [not null]
+  payload text
+  last_activity integer
 }
 
 Ref: lead_leads.source_id > lead_sources.id
@@ -449,3 +452,32 @@ Ref: lead_contact_methods.channel_id > lead_communication_channels.id
 Ref: lead_contact_methods.user_id > lead_users.id
 Ref: lead_knowledge_documents.client_id > lead_clients.id
 Ref: lead_conversations.lead_id > lead_leads.id
+
+Table lead_contacts {
+  id uuid [pk]
+  client_id uuid
+  first_name varchar
+  last_name varchar
+  position varchar
+  avatar_url varchar
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table lead_contact_channels {
+  id uuid [pk]
+  contact_id uuid
+  category_id integer
+  value varchar
+  label varchar
+  is_primary boolean
+  is_verified boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+Ref: lead_contacts.client_id > lead_clients.id
+Ref: lead_contact_channels.contact_id > lead_contacts.id
+Ref: auth_users.contact_id > lead_contacts.id
+Ref: lead_contact_channels.category_id > lead_channel_categories.id

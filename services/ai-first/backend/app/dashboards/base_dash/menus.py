@@ -1,10 +1,11 @@
 from typing import List, Dict
 
 # 1. Definimos los bloques (LEGOs)
-MENU_DASHBOARD = {"id": "dash", "label": "Dashboard", "icon": "ri-dashboard-2-line", "link": "/dashboard"}
+MENU_DASHBOARD = {"id": "dash", "label": "Dashboard", "icon": "ri-dashboard-2-line", "link": "/dashboard/base"}
 MENU_CLIENTS   = {"id": "clients", "label": "Admin Clientes", "icon": "ri-building-line", "link": "/clients"}
 MENU_PROMPTS   = {"id": "prompts", "label": "AI Prompts", "icon": "ri-robot-line", "link": "/prompts"}
 MENU_COUNTRIES   = {"id": "items", "label": "Paises", "icon": "ri-map-pin-line", "link": "/countries"}
+MENU_ADMIN_CLIENTS = {"id": "admin-clients", "label": "Admin", "icon": "ri-admin-line", "link": "/dashboard/client-admin"} # Updated
 
 # Submenú Sistema
 MENU_SYSTEM = {
@@ -43,17 +44,16 @@ ROLE_MENUS = {
     # 3. Client Admin (Coca Cola Admin)
     # Ve su negocio y gestión básica
     "client-admin": [
-        MENU_DASHBOARD,
+        MENU_ADMIN_CLIENTS, # Points to /dashboard/client-admin
         {"id": "leads", "label": "Gestión de Leads", "icon": "ri-team-line", "link": "/leads"},
-        {"id": "campaigns", "label": "Campañas", "icon": "ri-megaphone-line", "link": "/campaigns"},
-        MENU_PROMPTS,    # Gestiona SUS prompts
-        {"id": "settings", "label": "Configuración Cuenta", "icon": "ri-settings-4-line", "link": "/settings"}
+        {"id": "campaigns", "label": "Campañas", "icon": "ri-megaphone-line", "link": "/campaigns"}
     ],
     
     # 4. Client User (Coca Cola User)
     # Operativo puro
     "client-user": [
         MENU_DASHBOARD,
+        MENU_ADMIN_CLIENTS, # Points to /clients -> Dashboard (Filtered)
         {"id": "my-leads", "label": "Mis Leads", "icon": "ri-user-star-line", "link": "/leads/me"},
         {"id": "tasks", "label": "Mis Tareas", "icon": "ri-task-line", "link": "/tasks"}
     ]

@@ -19,13 +19,37 @@ async def app_init(user: User = Depends(current_active_user)):
     # 2. Get Menu
     menu_items = get_menu_for_role(current_role)
     
-    return {
-        "layout": "dashboard-shell",
-        "sidebar": {
-            "brand": "AI First",
-            "items": menu_items
-        },
-        "content": [
+    # 3. Get Initial Content based on Role
+    initial_content = []
+    
+    # Role-based landing logic
+    if current_role == "client-admin" and user.tenants:
+        from app.dashboards.client_admin_dash.router import get_client_admin_dashboard
+        # We try to get the dashboard content. Since it's a route, we call the logic.
+        # Note: This is a bit recursive in dependencies, better to import the builder.
+        # For now, let's just use the bienvenida or a redirect hint.
+        # Actually, let's keep it simple: just show a tailored bienvenida.
+        initial_content = [
+            {
+                "type": "grid",
+                "components": [
+                    {"type": "typography", "tag": "h2", "text": f"Panel de Control: {user.name or 'Admin'}", "class": "mb-4"},
+                    {"type": "card-metric", "label": "Rol Administrativo", "value": "SUPERVISOR", "color": "primary"}
+                ]
+            }
+        ]
+    elif current_role == "client-user":
+        initial_content = [
+            {
+                "type": "grid",
+                "components": [
+                    {"type": "typography", "tag": "h2", "text": f"Panel Operativo: {user.name or 'Vendedor'}", "class": "mb-4"},
+                    {"type": "card-metric", "label": "Rol Vendedor", "value": "EJECUTIVO", "color": "success"}
+                ]
+            }
+        ]
+    else:
+        initial_content = [
             {
                 "type": "grid",
                 "components": [
@@ -34,6 +58,14 @@ async def app_init(user: User = Depends(current_active_user)):
                 ]
             }
         ]
+    
+    return {
+        "layout": "dashboard-shell",
+        "sidebar": {
+            "brand": "AI First",
+            "items": menu_items
+        },
+        "content": initial_content
     }
 
 @router.get("/base", response_model=WebIAFirstResponse)

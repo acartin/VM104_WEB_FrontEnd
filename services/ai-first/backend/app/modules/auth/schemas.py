@@ -21,11 +21,13 @@ class ClientUserRead(BaseModel):
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
     name: Optional[str] = None
+    contact_id: Optional[uuid.UUID] = None
     # We return the list of tenants (ClientUser)
     tenants: List[ClientUserRead] = [] 
 
 class UserCreate(schemas.BaseUserCreate):
     name: Optional[str] = None
+    contact_id: Optional[uuid.UUID] = None
 
 class UserUpdate(schemas.BaseUserUpdate):
     name: Optional[str] = None

@@ -3,6 +3,7 @@ from sqlalchemy import Column, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from app.dal.database import Base
+from app.modules.contacts.models import LeadContact
 import uuid
 
 # 0. Legacy Tenant Table (Reference Only)
@@ -16,10 +17,14 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     __tablename__ = "auth_users"
     
     # Standard Fields (Mixin provides: id, email, hashed_password, is_active, is_superuser, is_verified)
-    name = Column(String, nullable=True) # Optional: User's full name
+    name = Column(String, nullable=True)
+    
+    # Person-Centric Identity Link
+    contact_id = Column(UUID(as_uuid=True), ForeignKey("lead_contacts.id"), nullable=True, index=True)
     
     # Relationships
     tenants = relationship("ClientUser", back_populates="user", lazy="selectin")
+    contact = relationship("LeadContact", lazy="joined")
 
 # 2. Roles Table (Clean Role Definitions)
 class Role(Base):

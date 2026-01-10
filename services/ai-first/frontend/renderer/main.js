@@ -11,39 +11,19 @@ import { LinkButtonGroup } from '../components/ui/ButtonGroup.js';
 import { LinkSidebar } from '../components/layout/Sidebar.js';
 import { LinkNavbar } from '../components/layout/Navbar.js';
 import { LinkGridVisual } from '../components/grids/GridVisual.js';
+import { LinkLeadControlGrid } from '../components/grids/LeadControlGrid.js';
 import { LinkTabs } from '../components/ui/Tabs.js';
 import { LinkModalForm, renderInput, renderFormFromSchema } from '../components/forms/ModalForm.js';
 import { LinkRow, LinkCol } from '../components/layout/Layout.js';
 import { LinkProjectBanner } from '../components/layout/ProjectBanner.js';
 import { LinkMemberListCard, LinkGenericCard, LinkFileGrid, LinkContactListDetailed } from '../components/cards/DashboardWidgets.js?v=52';
+import { safeBtoa, safeAtob } from '../utils/base64.js';
 
 const API_BASE_URL = window.AppConfig.API_BASE_URL; // Loaded from config.js
 
-const RENDERER_VERSION = "54";
+const RENDERER_VERSION = "62";
 console.log(`[Renderer] v${RENDERER_VERSION} Initializing...`);
 
-// Safe UTF-8 Base64 Encode
-function safeBtoa(str) {
-    try {
-        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
-            return String.fromCharCode('0x' + p1);
-        }));
-    } catch (e) {
-        return btoa(str);
-    }
-}
-
-// Safe UTF-8 Base64 Decode
-function safeAtob(str) {
-    try {
-        return decodeURIComponent(atob(str).split('').map(function (c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-    } catch (e) {
-        // Fallback for non-UTF8 base64
-        return atob(str);
-    }
-}
 
 window.appState = {
     currentPath: null
@@ -113,12 +93,14 @@ async function init() {
                 // If root, maybe load dashboard default content? 
                 // Currently app-init returns default content, so we are fine.
                 hydrateGrids();
+                hydrateLeadsControlGrid();
             }
 
         } else if (appRoot) {
             // Partial Render logic (likely unused if we always do full shell init check)
             appRoot.innerHTML = renderContent(appData.components);
             hydrateGrids();
+            hydrateLeadsControlGrid();
         }
 
     } catch (error) {
@@ -199,6 +181,7 @@ export async function navigateTo(href, pushState = true) {
             pageRoot.innerHTML = renderContent(viewData.components);
         }
         hydrateGrids();
+        hydrateLeadsControlGrid();
 
         // Update URL without reload (History API)
         if (pushState) {
@@ -222,6 +205,8 @@ export function renderComponent(component) {
             return LinkGridContainer(component);
         case 'grid-visual':
             return LinkGridVisual(component);
+        case 'grid-leads-control':
+            return LinkLeadControlGrid(component);
         case 'typography':
             return LinkTypography(component);
         case 'button-group':
@@ -602,6 +587,25 @@ window.handleEditAction = async (event, id, urlPattern, schemaStr) => {
         Swal.fire({ icon: 'error', title: 'Error', text: 'Could not fetch data for editing.' });
     }
 };
+// Generic Modal Action (Open Modal directly without GET)
+window.handleActionModal = (event, id, urlPattern, schemaStr, method = 'POST', title = 'Action') => {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    console.log('Handle Action Modal:', { id, urlPattern, method });
+    const actionUrl = urlPattern.replace('{id}', id);
+
+    let schema = [];
+    try {
+        schema = JSON.parse(safeAtob(schemaStr));
+    } catch (e) {
+        schema = JSON.parse(schemaStr);
+    }
+
+    window.openGenericModal(schema, actionUrl, method, title);
+};
 
 // --- HYDRATION ---
 // Handle Generic Actions (e.g. Header Buttons)
@@ -681,9 +685,11 @@ export async function hydrateGrids() {
                 formatter: (cell) => {
                     if (cell === undefined || cell === null) return '-';
                     if (col.type === 'badge') {
-                        const mapKey = String(cell);
-                        const badgeColor = (col.badge_map && col.badge_map[mapKey]) ? col.badge_map[mapKey] : (col.color || 'primary');
-                        return gridjs.html(`<span class="badge bg-${badgeColor}">${cell}</span>`);
+                        const label = (typeof cell === 'object') ? (cell.label || cell.name || JSON.stringify(cell)) : cell;
+                        const color = (typeof cell === 'object' && cell.color) ? cell.color : (col.color || 'primary');
+                        const mapKey = String(label);
+                        const badgeColor = (col.badge_map && col.badge_map[mapKey]) ? col.badge_map[mapKey] : color;
+                        return gridjs.html(`<span class="badge bg-${badgeColor}">${label}</span>`);
                     }
                     if (col.truncate && typeof cell === 'string' && cell.length > col.truncate) {
                         return cell.substring(0, col.truncate) + '...';
@@ -766,8 +772,34 @@ export async function hydrateGrids() {
                 //thead: 'table-light' // Removed to allow Velzon theme to control headers
             },
             data: async () => {
-                const rawData = await fetchGridDataForGridJs(container, currentParams);
-                return rawData.map(item => gridColumns.map(col => item[col.id]));
+                // 1. Try Base64 preloaded rows first (if they have data)
+                if (container.dataset.rowsB64) {
+                    try {
+                        const preloadedRows = JSON.parse(safeAtob(container.dataset.rowsB64));
+                        if (Array.isArray(preloadedRows) && preloadedRows.length > 0) {
+                            return preloadedRows.map(item => gridColumns.map(col => item[col.id]));
+                        }
+                    } catch (e) {
+                        console.error('Error decoding rows-b64:', e);
+                    }
+                }
+                // 2. Try plain JSON preloaded rows (legacy/fallback if they have data)
+                if (container.dataset.rows) { // Removed `&& container.dataset.rows !== '[]'` as Array.isArray and length check handles it
+                    try {
+                        const preloadedRows = JSON.parse(container.dataset.rows);
+                        if (Array.isArray(preloadedRows) && preloadedRows.length > 0) {
+                            return preloadedRows.map(item => gridColumns.map(col => item[col.id]));
+                        }
+                    } catch (e) {
+                        console.error('Error parsing rows:', e);
+                    }
+                }
+                // 3. Fallback to API Fetch if URL is defined
+                if (container.dataset.url && container.dataset.url !== 'undefined') {
+                    const rawData = await fetchGridDataForGridJs(container, currentParams);
+                    return rawData.map(item => gridColumns.map(col => item[col.id]));
+                }
+                return [];
             }
         });
 
@@ -924,3 +956,133 @@ export async function refreshGrids() {
 
 // Start Engine
 document.addEventListener('DOMContentLoaded', init);
+
+/**
+ * Specialized hydration for the Leads Control Panel.
+ * Uses Grid.js but with custom high-fidelity cell renderers.
+ */
+function hydrateLeadsControlGrid() {
+    const grids = document.querySelectorAll('.js-grid-leads-control');
+    grids.forEach(el => {
+        if (el.dataset.initialized) return;
+        el.dataset.initialized = "true";
+
+        const dataUrl = el.dataset.url;
+        const columns = JSON.parse(el.dataset.columns || '[]');
+        const actions = JSON.parse(el.dataset.actions || '[]');
+        const preloadedRowsB64 = el.dataset.rowsB64;
+
+        let preloadedRows = [];
+        if (preloadedRowsB64) {
+            try {
+                preloadedRows = JSON.parse(safeAtob(preloadedRowsB64));
+            } catch (e) {
+                console.error("Error decoding preloaded rows:", e);
+            }
+        }
+
+        // Prepare Columns for Grid.js
+        const gridColumns = [
+            { id: 'id', name: 'ID', hidden: true }
+        ];
+
+        columns.forEach(col => {
+            gridColumns.push({
+                id: col.id || col.key,
+                name: col.label,
+                sort: col.sortable !== false,
+                formatter: (cell) => {
+                    if (cell === undefined || cell === null) return '-';
+
+                    if (col.type === 'gauge-identity') {
+                        const score = (typeof cell === 'object') ? (cell.score || 0) : (parseInt(cell) || 0);
+                        const name = (typeof cell === 'object') ? (cell.name || 'S/N') : '';
+
+                        // Thermal Color Logic
+                        let color = '#475569';
+                        if (score >= 90) color = '#ef4444';
+                        else if (score >= 70) color = '#f97316';
+                        else if (score >= 50) color = '#10b981';
+                        else if (score >= 20) color = '#f59e0b';
+
+                        const r = 18;
+                        const c = 2 * Math.PI * r;
+                        const offset = c - (score / 100) * c;
+
+                        return gridjs.html(`
+                            <div class="d-flex align-items-center">
+                                <div class="me-3 position-relative" style="width: 44px; height: 44px;">
+                                    <svg width="44" height="44" viewBox="0 0 44 44">
+                                        <circle cx="22" cy="22" r="${r}" fill="none" stroke="#e9ebec" stroke-width="3"></circle>
+                                        <circle cx="22" cy="22" r="${r}" fill="none" stroke="${color}" stroke-width="3" 
+                                            stroke-dasharray="${c}" stroke-dashoffset="${offset}" 
+                                            stroke-linecap="round" transform="rotate(-90 22 22)"></circle>
+                                        <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="11" font-weight="600" fill="#495057">${score}</text>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fs-14 fw-medium text-dark">${name}</h6>
+                                </div>
+                            </div>
+                        `);
+                    }
+
+                    if (col.type === 'badge') {
+                        const label = (typeof cell === 'object') ? (cell.label || cell.name || JSON.stringify(cell)) : cell;
+                        const color = (typeof cell === 'object' && cell.color) ? cell.color : (col.color || 'primary');
+                        return gridjs.html(`<span class="badge bg-${color}-subtle text-${color} border border-${color}-subtle px-2 py-1">${label}</span>`);
+                    }
+
+                    return cell;
+                }
+            });
+        });
+
+        if (actions.length > 0) {
+            gridColumns.push({
+                name: 'Acciones',
+                sort: false,
+                formatter: (_, row) => {
+                    const idColIndex = gridColumns.findIndex(c => c.id === 'id');
+                    const rowId = row.cells[idColIndex].data;
+                    return gridjs.html(`
+                        <div class="dropdown">
+                            <button class="btn btn-soft-secondary btn-sm" data-bs-toggle="dropdown">
+                                <i class="ri-more-fill"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/leads/${rowId}"><i class="ri-eye-line align-middle me-2"></i>Ver Perfil</a></li>
+                                <li><a class="dropdown-item" href="/leads/${rowId}/chat"><i class="ri-message-3-line align-middle me-2"></i>Abrir Chat</a></li>
+                            </ul>
+                        </div>
+                    `);
+                }
+            });
+        }
+
+        const grid = new gridjs.Grid({
+            columns: gridColumns,
+            sort: true,
+            pagination: { limit: 10 },
+            style: {
+                table: { 'white-space': 'nowrap' },
+                th: { 'background-color': '#f3f6f9', 'color': '#495057', 'font-weight': '600' }
+            },
+            data: async () => {
+                // 1. Try preloaded rows
+                if (preloadedRows.length > 0) {
+                    return preloadedRows.map(item => gridColumns.map(col => item[col.id]));
+                }
+                // 2. Fetch from API
+                if (dataUrl) {
+                    const rawData = await fetchGridDataForGridJs(el); // Pass the element 'el'
+                    return rawData.map(item => gridColumns.map(col => item[col.id]));
+                }
+                return [];
+            }
+        });
+
+        el.innerHTML = '';
+        grid.render(el);
+    });
+}

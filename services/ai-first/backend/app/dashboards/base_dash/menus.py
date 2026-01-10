@@ -1,11 +1,12 @@
 from typing import List, Dict
 
 # 1. Definimos los bloques (LEGOs)
-MENU_DASHBOARD = {"id": "dash", "label": "Dashboard", "icon": "ri-dashboard-2-line", "link": "/dashboard/base"}
+MENU_DASHBOARD = {"id": "dash", "label": "Dashboard", "icon": "ri-dashboard-2-line", "link": "/base"}
 MENU_CLIENTS   = {"id": "clients", "label": "Admin Clientes", "icon": "ri-building-line", "link": "/clients"}
 MENU_PROMPTS   = {"id": "prompts", "label": "AI Prompts", "icon": "ri-robot-line", "link": "/prompts"}
 MENU_COUNTRIES   = {"id": "items", "label": "Paises", "icon": "ri-map-pin-line", "link": "/countries"}
-MENU_ADMIN_CLIENTS = {"id": "admin-clients", "label": "Admin", "icon": "ri-admin-line", "link": "/dashboard/client-admin"} # Updated
+MENU_ADMIN_CLIENTS = {"id": "admin-clients", "label": "Admin", "icon": "ri-admin-line", "link": "/dashboard/client-admin"}
+MENU_USER_DASH = {"id": "user-dash", "label": "Mi Dashboard", "icon": "ri-dashboard-2-line", "link": "/dashboard/client-user"}
 
 # Submenú Sistema
 MENU_SYSTEM = {
@@ -44,17 +45,17 @@ ROLE_MENUS = {
     # 3. Client Admin (Coca Cola Admin)
     # Ve su negocio y gestión básica
     "client-admin": [
-        MENU_ADMIN_CLIENTS, # Points to /dashboard/client-admin
-        {"id": "leads", "label": "Gestión de Leads", "icon": "ri-team-line", "link": "/leads"},
+        MENU_ADMIN_CLIENTS, # Visión gerencial (Dashboard de Equipo/Negocio)
+        MENU_USER_DASH,      # Visión operativa personal
+        {"id": "leads-me", "label": "Mis Leads", "icon": "ri-user-star-line", "link": "/leads/me"},
         {"id": "campaigns", "label": "Campañas", "icon": "ri-megaphone-line", "link": "/campaigns"}
     ],
     
     # 4. Client User (Coca Cola User)
     # Operativo puro
     "client-user": [
-        MENU_DASHBOARD,
-        MENU_ADMIN_CLIENTS, # Points to /clients -> Dashboard (Filtered)
-        {"id": "my-leads", "label": "Mis Leads", "icon": "ri-user-star-line", "link": "/leads/me"},
+        MENU_USER_DASH,
+        {"id": "leads-me", "label": "Mis Leads", "icon": "ri-user-star-line", "link": "/leads/me"},
         {"id": "tasks", "label": "Mis Tareas", "icon": "ri-task-line", "link": "/tasks"}
     ]
 }

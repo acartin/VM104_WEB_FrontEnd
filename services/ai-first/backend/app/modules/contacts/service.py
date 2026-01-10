@@ -249,4 +249,30 @@ class ContactService:
             )
         return True
 
+    async def get_my_leads(self, user_id: UUID, skip: int = 0, limit: int = 50) -> List[dict]:
+        query = text("""
+            SELECT id, full_name, email, phone, status, score_total, created_at
+            FROM lead_leads
+            WHERE assigned_user_id = :user_id AND deleted_at IS NULL
+            ORDER BY created_at DESC
+            OFFSET :skip LIMIT :limit
+        """)
+        async with engine.connect() as conn:
+            result = await conn.execute(query, {"user_id": user_id, "skip": skip, "limit": limit})
+            return [dict(row._mapping) for row in result.all()]
+
+    async def get_my_appointments(self, user_id: UUID) -> List[dict]:
+        query = text("""
+            SELECT a.id, a.scheduled_at, a.meeting_type, a.status, l.full_name as lead_name
+            FROM lead_appointments a
+            JOIN lead_leads l ON a.lead_id = l.id
+            WHERE l.assigned_user_id = :user_id 
+              AND a.deleted_at IS NULL
+              AND a.scheduled_at >= CURRENT_DATE
+            ORDER BY a.scheduled_at ASC
+        """)
+        async with engine.connect() as conn:
+            result = await conn.execute(query, {"user_id": user_id})
+            return [dict(row._mapping) for row in result.all()]
+
 service = ContactService()

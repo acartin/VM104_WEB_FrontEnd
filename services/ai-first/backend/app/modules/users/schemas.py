@@ -13,6 +13,7 @@ class UserCreate(UserBase):
     password: str
     client_id: Optional[UUID] = None
     role_id: Optional[UUID] = None
+    contact_id: Optional[UUID] = None
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
@@ -30,6 +31,7 @@ class UserRow(UserBase):
     client_name: Optional[str] = None
     client_id: Optional[UUID] = None
     role_id: Optional[UUID] = None
+    contact_id: Optional[UUID] = None
 
     class Config:
         from_attributes = True

@@ -64,7 +64,17 @@ async def get_client_admin_dashboard(current_user: User = Depends(current_active
             "is_active": c.is_active,
             "avatar": "https://themesbrand.com/velzon/html/master/assets/images/users/user-dummy-img.jpg",
             "editSchema": edit_schema_b64,
-            "channels": [ch.model_dump() for ch in c.channels] if c.channels else []
+            "convertSchema": base64.b64encode(json.dumps([
+                {"name": "email", "label": "Email de Login", "type": "text", "required": True, "value": next((ch.value for ch in c.channels if '@' in (ch.value or "")), "")},
+                {"name": "password", "label": "Contraseña", "type": "password", "required": True}
+            ]).encode('utf-8')).decode('utf-8'),
+            "channels": [
+                {
+                    **ch.model_dump(),
+                    "category_icon": "ri-mail-line" if ch.type == 'email' else "ri-phone-line" if ch.type == 'phone' else "ri-whatsapp-line" if ch.type == 'whatsapp' else "ri-question-line",
+                    "category_name": ch.type.capitalize() if ch.type else "Otro"
+                } for ch in c.channels
+            ] if c.channels else []
         })
 
     # 2.5 Fetch Documents

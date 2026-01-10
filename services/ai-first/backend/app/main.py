@@ -14,6 +14,9 @@ from app.modules.auth.router import router as auth_router
 from app.modules.users.router import router as users_router
 from app.modules.roles.router import router as roles_router
 from app.modules.contacts.router import router as contacts_router
+from app.modules.leads.router import router as leads_router
+from app.modules.campaigns.router import router as campaigns_router
+from app.dashboards.client_user_dash.router import router as client_user_router
 
 app = FastAPI(title="Web IAFirst Operational API")
 
@@ -55,6 +58,9 @@ async def health_check():
 # Include Feature Routers
 app.include_router(base_dash_router, tags=["Dashboard (Base)"]) # Root prefix for app-init
 app.include_router(client_admin_router, prefix="/dashboard", tags=["Dashboard (Client Admin)"])
+app.include_router(client_user_router, prefix="/dashboard", tags=["Dashboard (Client User)"])
+app.include_router(leads_router, prefix="/leads", tags=["Leads Operations"])
+app.include_router(campaigns_router, prefix="/campaigns", tags=["Campaigns Operations"])
 app.include_router(clients_router, tags=["Clients"])
 app.include_router(countries_router, tags=["Countries (System)"])
 app.include_router(prompts_router, tags=["AI Prompts"])

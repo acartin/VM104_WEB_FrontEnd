@@ -23,6 +23,12 @@ export function LinkMemberListCard(data) {
                                 onclick="window.handleEditAction(event, '${member.id}', '/contacts/{id}', '${member.editSchema}')">
                                 <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Editar
                             </a></li>
+                            ${member.convertSchema ? `
+                            <li><a class="dropdown-item" href="javascript:void(0);" 
+                                onclick="window.handleActionModal(event, '${member.id}', '/contacts/{id}/convert', '${member.convertSchema}', 'POST', 'Configurar Acceso')">
+                                <i class="ri-key-2-fill align-bottom me-2 text-muted"></i> Dar Acceso
+                            </a></li>
+                            ` : ''}
                             <li><a class="dropdown-item text-danger" href="javascript:void(0);" 
                                 onclick="window.deleteItem(event, '/contacts/${member.id}', '¿Eliminar contacto?')">
                                 <i class="ri-delete-bin-fill align-bottom me-2"></i> Eliminar
@@ -215,6 +221,12 @@ export function LinkContactListDetailed(data) {
                                                 onclick="window.handleEditAction(event, '${member.id}', '/contacts/{id}', '${member.editSchema}')">
                                                 <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Editar
                                             </a></li>
+                                            ${member.convertSchema ? `
+                                            <li><a class="dropdown-item" href="javascript:void(0);" 
+                                                onclick="window.handleActionModal(event, '${member.id}', '/contacts/{id}/convert', '${member.convertSchema}', 'POST', 'Configurar Acceso')">
+                                                <i class="ri-key-2-fill align-bottom me-2 text-muted"></i> Dar Acceso
+                                            </a></li>
+                                            ` : ''}
                                             <li><a class="dropdown-item text-danger" href="javascript:void(0);" 
                                                 onclick="window.deleteItem(event, '/contacts/${member.id}', '¿Eliminar contacto?')">
                                                 <i class="ri-delete-bin-fill align-bottom me-2"></i> Eliminar

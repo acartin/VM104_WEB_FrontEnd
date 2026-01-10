@@ -15,7 +15,7 @@ class UsersService:
     async def list_users(self) -> List[UserRow]:
         query = text("""
             SELECT 
-                u.id, u.email, u.name, u.is_active, u.is_superuser,
+                u.id, u.email, u.name, u.is_active, u.is_superuser, u.contact_id,
                 r.name as role_name, r.slug as role_slug, r.id as role_id,
                 lc.name as client_name, lc.id as client_id
             FROM auth_users u
@@ -32,7 +32,7 @@ class UsersService:
     async def get_user(self, user_id: UUID) -> Optional[UserRow]:
         query = text("""
             SELECT 
-                u.id, u.email, u.name, u.is_active, u.is_superuser,
+                u.id, u.email, u.name, u.is_active, u.is_superuser, u.contact_id,
                 r.name as role_name, r.slug as role_slug, r.id as role_id,
                 lc.name as client_name, lc.id as client_id
             FROM auth_users u
@@ -54,15 +54,16 @@ class UsersService:
             try:
                 # 1. Create User
                 await conn.execute(text("""
-                    INSERT INTO auth_users (id, email, hashed_password, is_active, is_superuser, is_verified, name)
-                    VALUES (:id, :email, :password, :active, :superuser, true, :name)
+                    INSERT INTO auth_users (id, email, hashed_password, is_active, is_superuser, is_verified, name, contact_id)
+                    VALUES (:id, :email, :password, :active, :superuser, true, :name, :contact_id)
                 """), {
                     "id": new_user_id,
                     "email": user.email,
                     "password": hashed_password,
                     "active": user.is_active,
                     "superuser": user.is_superuser,
-                    "name": user.name
+                    "name": user.name,
+                    "contact_id": user.contact_id
                 })
 
                 # 2. Link to Client and Role if provided
@@ -80,6 +81,51 @@ class UsersService:
                 await conn.commit()
             except IntegrityError:
                 await conn.rollback()
+                
+                # Person-Centric Logic: If the user already exists but is associated with the SAME contact, 
+                # we can reactivate/update instead of failing.
+                async with engine.begin() as conn_retry:
+                    existing = await conn_retry.execute(text("SELECT id, contact_id, is_active FROM auth_users WHERE email = :email"), {"email": user.email})
+                    row = existing.fetchone()
+                    if row and row.contact_id == user.contact_id:
+                        # 1. Reactivate and Update password/name
+                        await conn_retry.execute(text("""
+                            UPDATE auth_users 
+                            SET hashed_password = :password, is_active = true, name = :name
+                            WHERE id = :id
+                        """), {
+                            "id": row.id,
+                            "password": hashed_password,
+                            "name": user.name
+                        })
+
+                        # 2. Ensure Client Link exists (or update it)
+                        if user.client_id and user.role_id:
+                            # Check if link already exists
+                            link_check = await conn_retry.execute(text("""
+                                SELECT id FROM auth_client_user 
+                                WHERE user_id = :uid AND client_id = :cid
+                            """), {"uid": row.id, "cid": user.client_id})
+                            
+                            if not link_check.fetchone():
+                                await conn_retry.execute(text("""
+                                    INSERT INTO auth_client_user (id, user_id, client_id, role_id)
+                                    VALUES (:id, :user_id, :client_id, :role_id)
+                                """), {
+                                    "id": uuid.uuid4(),
+                                    "user_id": row.id,
+                                    "client_id": user.client_id,
+                                    "role_id": user.role_id
+                                })
+                            else:
+                                await conn_retry.execute(text("""
+                                    UPDATE auth_client_user SET role_id = :rid
+                                    WHERE user_id = :uid AND client_id = :cid
+                                """), {"uid": row.id, "cid": user.client_id, "rid": user.role_id})
+                        
+                        await conn_retry.commit()
+                        return await self.get_user(row.id)
+                
                 raise HTTPException(status_code=400, detail="User with this email already exists.")
             except Exception as e:
                 await conn.rollback()
@@ -147,8 +193,11 @@ class UsersService:
 
     async def delete_user(self, user_id: UUID):
         async with engine.begin() as conn:
-            # We don't have soft delete in auth_users yet, so we just deactivate
-            await conn.execute(text("UPDATE auth_users SET is_active = false WHERE id = :id"), {"id": user_id})
+            # 1. First cleanup links to avoid constraint violations
+            await conn.execute(text("DELETE FROM auth_client_user WHERE user_id = :id"), {"id": user_id})
+            
+            # 2. Hard delete the user to allow clean re-conversions in Person-Centric model
+            await conn.execute(text("DELETE FROM auth_users WHERE id = :id"), {"id": user_id})
             await conn.commit()
 
     async def list_roles(self):

@@ -1,3 +1,5 @@
+import { safeBtoa } from '../../utils/base64.js';
+
 const API_BASE_URL = window.AppConfig.API_BASE_URL;
 
 export function LinkGridVisual(component) {
@@ -20,11 +22,14 @@ export function LinkGridVisual(component) {
     const columnsJson = JSON.stringify(props.columns || []);
     const actionsJson = JSON.stringify(props.actions || []);
     const filtersJson = JSON.stringify(props.filters || []);
+    const rowsJson = JSON.stringify(component.rows || props.rows || []);
+    const rowsB64 = safeBtoa(rowsJson);
+    const label = component.label || component.title || 'Data Grid';
 
     return `
         <div class="card">
             <div class="card-header align-items-center d-flex">
-                <h4 class="card-title mb-0 flex-grow-1">${component.label || 'Data Grid'}</h4>
+                <h4 class="card-title mb-0 flex-grow-1">${label}</h4>
                 <div class="flex-shrink-0">
                     ${(props.header_actions || []).map(btn => renderHeaderAction(btn, props.form_schema)).join('')}
                 </div>
@@ -38,6 +43,7 @@ export function LinkGridVisual(component) {
                          data-columns='${columnsJson.replace(/'/g, "&apos;")}'
                          data-actions='${actionsJson.replace(/'/g, "&apos;")}'
                          data-filters='${filtersJson.replace(/'/g, "&apos;")}'
+                         data-rows-b64="${rowsB64}"
                          >
                          <div class="text-center p-5">
                             <div class="spinner-border text-primary" role="status">

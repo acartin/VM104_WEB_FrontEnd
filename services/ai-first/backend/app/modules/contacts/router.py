@@ -4,6 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.modules.auth.config import current_active_user
 from app.modules.auth.models import User as AuthUser
+from app.modules.auth.dependencies import RoleChecker
+from app.modules.users.service import service as users_service
+from app.modules.users.schemas import UserCreate
 from . import service, schemas, categories
 
 router = APIRouter()
@@ -110,3 +113,45 @@ async def delete_contact(
         is_superuser=current_user.is_superuser
     )
     return {"status": "success", "message": "Contact deleted"}
+
+@router.post("/contacts/{contact_id}/convert")
+async def convert_contact_to_user(
+    contact_id: UUID,
+    data: schemas.ContactConvert,
+    current_user: AuthUser = Depends(RoleChecker(["client-admin", "admin", "superadmin"]))
+):
+    """
+    Promote a Contact to a System User. Restricted to Client Admins.
+    """
+    # 1. Verify Contact exists and belongs to the same client
+    if not current_user.tenants:
+        raise HTTPException(status_code=403, detail="User has no client context")
+        
+    client_id = current_user.tenants[0].client_id
+    
+    contact = await service.service.get_contact_by_id(contact_id, client_id)
+    if not contact:
+        raise HTTPException(status_code=404, detail="Contact not found or access denied")
+
+    # 2. Check if already has a user link (Optional but recommended)
+    # TODO: Add check if needed
+
+    # 3. Create User using UsersService
+    # Forced role: client-user (ID: 94fb2738-073f-480a-868a-6271e3b362cf)
+    CLIENT_USER_ROLE_ID = UUID("94fb2738-073f-480a-868a-6271e3b362cf")
+    
+    user_create = UserCreate(
+        email=data.email,
+        password=data.password,
+        name=f"{contact.first_name} {contact.last_name or ''}",
+        is_active=True,
+        client_id=client_id,
+        role_id=CLIENT_USER_ROLE_ID,
+        contact_id=contact_id
+    )
+
+    try:
+        new_user = await users_service.create_user(user_create)
+        return {"status": "success", "message": "User created and linked", "user_id": new_user.id}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

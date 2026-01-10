@@ -50,3 +50,7 @@ class ContactRead(ContactBase):
 
     class Config:
         from_attributes = True
+
+class ContactConvert(BaseModel):
+    email: EmailStr
+    password: str

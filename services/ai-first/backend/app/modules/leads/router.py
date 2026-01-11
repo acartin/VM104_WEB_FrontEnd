@@ -82,6 +82,48 @@ def _transform_leads_to_rows(leads):
                 "name": l['full_name'] or "S/N",
                 "score": l['score_total'] or 0
             },
+            "engagement": {
+                "score": l['score_engagement'] or 0,
+                "label": l['eng_label'] or "-",
+                "icon": l['eng_icon'] or "ri-message-3-line",
+                "color": l['eng_color'] or "thermal-none"
+            },
+            "finance": {
+                "score": l['score_finance'] or 0,
+                "label": l['fin_label'] or "-",
+                "icon": l['fin_icon'] or "ri-bank-line",
+                "color": l['fin_color'] or "thermal-none"
+            },
+            "timeline": {
+                "score": l['score_timeline'] or 0,
+                "label": l['tim_label'] or "-",
+                "icon": l['tim_icon'] or "ri-time-line",
+                "color": l['tim_color'] or "thermal-none"
+            },
+            "match": {
+                "score": l['score_match'] or 0,
+                "label": l['mat_label'] or "-",
+                "icon": l['mat_icon'] or "ri-home-4-line",
+                "color": l['mat_color'] or "thermal-none"
+            },
+            "info": {
+                "score": l['score_info'] or 0,
+                "label": l['inf_label'] or "-",
+                "icon": l['inf_icon'] or "ri-file-list-3-line",
+                "color": l['inf_color'] or "thermal-none"
+            },
+            "outcome": {
+                "score": 0,
+                "label": l['out_label'] or "PENDIENTE",
+                "icon": l['out_icon'] or "ri-flag-line",
+                "color": l['out_color'] or "thermal-none"
+            },
+            "workflow": {
+                "score": 0,
+                "label": l['wf_label'] or "ACTIVO",
+                "icon": l['wf_icon'] or "ri-git-branch-line",
+                "color": l['wf_color'] or "thermal-none"
+            },
             "email": l['email'] or "-",
             "phone": l['phone'] or "-",
             "status": {
@@ -108,10 +150,7 @@ async def get_my_leads(
     limit: int = Query(50, ge=1, le=100),
     user: User = Depends(current_active_user)
 ):
-    """
-    Returns the full list of leads assigned to the current user (Seller).
-    Formatted as an SDUI page with a Grid component.
-    """
+    """Returns the CRM Workview for the current user."""
     leads = await contact_service.get_my_leads(user.id, skip=skip, limit=limit)
     rows = _transform_leads_to_rows(leads)
 
@@ -134,11 +173,14 @@ async def get_my_leads(
                         "properties": {
                             "data_url": "/leads/me/data",
                             "columns": [
-                                {"id": "identity", "label": "Lead / Calificación", "type": "gauge-identity", "sortable": True},
-                                {"id": "email", "label": "Email"},
-                                {"id": "phone", "label": "Teléfono"},
-                                {"id": "status", "label": "Estado", "type": "badge"},
-                                {"id": "created", "label": "Fecha"}
+                                {"id": "identity", "label": "Lead / Calificación", "type": "gauge-identity", "sortable": True, "width": "250px"},
+                                {"id": "engagement", "label": "Engagement", "type": "scoring-pillar", "sortable": True},
+                                {"id": "finance", "label": "Finance", "type": "scoring-pillar", "sortable": True},
+                                {"id": "timeline", "label": "TimeLine", "type": "scoring-pillar", "sortable": True},
+                                {"id": "match", "label": "Match", "type": "scoring-pillar", "sortable": True},
+                                {"id": "info", "label": "Info", "type": "scoring-pillar", "sortable": True},
+                                {"id": "outcome", "label": "Outcome", "type": "scoring-pillar", "sortable": True},
+                                {"id": "workflow", "label": "Workflow", "type": "scoring-pillar", "sortable": True}
                             ],
                             "actions": [
                                 {"label": "Ver Perfil", "icon": "ri-eye-line", "action": "navigate", "url": "/leads/{id}"},

@@ -97,6 +97,83 @@
             color: #fff !important;
             border-color: var(--vz-primary) !important;
         }
+
+        /* 🌡️ Thermal Palette - Scoring System */
+        .thermal-extreme {
+            color: #f06548 !important;
+        }
+
+        /* Rojo (Velzon Danger) */
+        .thermal-high {
+            color: #f7b84b !important;
+        }
+
+        /* Naranja (Velzon Warning) */
+        .thermal-mid {
+            color: #4b38b3 !important;
+        }
+
+        /* Morado (Velzon Primary) */
+        .thermal-low {
+            color: #0ab39c !important;
+        }
+
+        /* Verde (Velzon Success) */
+        .thermal-none {
+            color: #adb5bd !important;
+            opacity: 0.5;
+        }
+
+        /* Gris Neutro */
+        .thermal-info {
+            color: #299cdb !important;
+        }
+
+        /* Azul (Velzon Info) */
+
+        /* Premium Icon Effects */
+        .js-grid-leads-control i {
+            transition: transform 0.2s ease-in-out;
+            display: inline-block;
+        }
+
+        .js-grid-leads-control i:hover {
+            transform: scale(1.25);
+            filter: drop-shadow(0 0 5px currentColor);
+        }
+
+        /* 🏷️ Thermal Pills (Uniform Buttons) */
+        .thermal-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 105px;
+            height: 24px;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            border-radius: 4px;
+            border: 1px solid currentColor;
+            background-color: transparent;
+            transition: all 0.2s ease;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 4px;
+            text-decoration: none !important;
+        }
+
+        .thermal-pill:hover {
+            background-color: color-mix(in srgb, currentColor, transparent 85%);
+            cursor: pointer;
+            transform: none;
+            opacity: 1;
+        }
+
+        [data-theme="light"] .thermal-pill:hover {
+            background-color: color-mix(in srgb, currentColor, transparent 92%);
+        }
     </style>
 </head>
 
@@ -135,7 +212,7 @@
             window.location.href = 'login.html';
         }
     </script>
-    <script type="module" src="/renderer/main.js?v=62"></script>
+    <script type="module" src="/renderer/main.js?v=63"></script>
 </body>
 
 </html>

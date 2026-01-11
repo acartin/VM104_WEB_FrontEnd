@@ -15,7 +15,7 @@ export function LinkModalForm(id, title, formHtml, saveActionUrl, method = 'POST
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="submitModalForm('${id}-form', '${saveActionUrl}', '${method}')">Save Changes</button>
+                    <button type="button" class="btn btn-primary" onclick="window.submitModalForm(event, '${id}-form', '${saveActionUrl}', '${method}')">Save Changes</button>
                 </div>
             </div>
         </div>

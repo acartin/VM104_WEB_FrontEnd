@@ -11,12 +11,10 @@ router = APIRouter()
 @router.get("/", response_model=WebIAFirstResponse)
 @router.get("", response_model=WebIAFirstResponse)
 async def get_all_leads_view(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
     user: User = Depends(current_active_user)
 ):
     """Returns the General Management view for Leads (for Admins)."""
-    leads = await contact_service.get_my_leads(user.id, skip=skip, limit=limit)
+    leads = await contact_service.get_my_leads(user.id)
     rows = _transform_leads_to_rows(leads)
     
     return {
@@ -49,12 +47,7 @@ async def get_all_leads_view(
                                 {"label": "Ver Detalle", "icon": "ri-eye-line", "action": "navigate", "url": "/leads/{id}"}
                             ]
                         },
-                        "rows": rows,
-                        "pagination": {
-                            "skip": skip,
-                            "limit": limit,
-                            "total": len(leads)
-                        }
+                        "rows": rows
                     }
                 ]
             }
@@ -64,13 +57,11 @@ async def get_all_leads_view(
 
 @router.get("/data", response_model=List[dict])
 async def list_leads_data(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
     user: User = Depends(current_active_user)
 ):
     """Returns raw data for all leads (Placeholder for Admin)."""
     # For now, return same as 'me' until manage logic is ready
-    leads = await contact_service.get_my_leads(user.id, skip=skip, limit=limit)
+    leads = await contact_service.get_my_leads(user.id)
     return _transform_leads_to_rows(leads)
 
 def _transform_leads_to_rows(leads):
@@ -80,49 +71,57 @@ def _transform_leads_to_rows(leads):
             "id": str(l['id']),
             "identity": {
                 "name": l['full_name'] or "S/N",
-                "score": l['score_total'] or 0
+                "score": l['score_total'] or 0,
+                "color": l.get('prio_color') or "thermal-none"
             },
             "engagement": {
-                "score": l['score_engagement'] or 0,
-                "label": l['eng_label'] or "-",
-                "icon": l['eng_icon'] or "ri-message-3-line",
-                "color": l['eng_color'] or "thermal-none"
+                "score": l.get('score_engagement', 0),
+                "totalScore": l.get('score_total', 0),
+                "label": l.get('eng_label') or "-",
+                "icon": l.get('eng_icon') or "ri-message-3-line",
+                "color": l.get('eng_color') or "thermal-none"
             },
             "finance": {
-                "score": l['score_finance'] or 0,
-                "label": l['fin_label'] or "-",
-                "icon": l['fin_icon'] or "ri-bank-line",
-                "color": l['fin_color'] or "thermal-none"
+                "score": l.get('score_finance', 0),
+                "totalScore": l.get('score_total', 0),
+                "label": l.get('fin_label') or "-",
+                "icon": l.get('fin_icon') or "ri-bank-line",
+                "color": l.get('fin_color') or "thermal-none"
             },
             "timeline": {
-                "score": l['score_timeline'] or 0,
-                "label": l['tim_label'] or "-",
-                "icon": l['tim_icon'] or "ri-time-line",
-                "color": l['tim_color'] or "thermal-none"
+                "score": l.get('score_timeline', 0),
+                "totalScore": l.get('score_total', 0),
+                "label": l.get('tim_label') or "-",
+                "icon": l.get('tim_icon') or "ri-time-line",
+                "color": l.get('tim_color') or "thermal-none"
             },
             "match": {
-                "score": l['score_match'] or 0,
-                "label": l['mat_label'] or "-",
-                "icon": l['mat_icon'] or "ri-home-4-line",
-                "color": l['mat_color'] or "thermal-none"
+                "score": l.get('score_match', 0),
+                "totalScore": l.get('score_total', 0),
+                "label": l.get('mat_label') or "-",
+                "icon": l.get('mat_icon') or "ri-home-4-line",
+                "color": l.get('mat_color') or "thermal-none"
             },
             "info": {
-                "score": l['score_info'] or 0,
-                "label": l['inf_label'] or "-",
-                "icon": l['inf_icon'] or "ri-file-list-3-line",
-                "color": l['inf_color'] or "thermal-none"
+                "score": l.get('score_info', 0),
+                "totalScore": l.get('score_total', 0),
+                "label": l.get('inf_label') or "-",
+                "icon": l.get('inf_icon') or "ri-file-list-3-line",
+                "color": l.get('inf_color') or "thermal-none"
             },
             "outcome": {
                 "score": 0,
-                "label": l['out_label'] or "PENDIENTE",
-                "icon": l['out_icon'] or "ri-flag-line",
-                "color": l['out_color'] or "thermal-none"
+                "totalScore": l.get('score_total', 0),
+                "label": l.get('out_label') or "PENDIENTE",
+                "icon": l.get('out_icon') or "ri-flag-line",
+                "color": l.get('out_color') or "thermal-none"
             },
             "workflow": {
                 "score": 0,
-                "label": l['wf_label'] or "ACTIVO",
-                "icon": l['wf_icon'] or "ri-git-branch-line",
-                "color": l['wf_color'] or "thermal-none"
+                "totalScore": l.get('score_total', 0),
+                "label": l.get('wf_label') or "ACTIVO",
+                "icon": l.get('wf_icon') or "ri-git-branch-line",
+                "color": l.get('wf_color') or "thermal-none"
             },
             "email": l['email'] or "-",
             "phone": l['phone'] or "-",
@@ -136,23 +135,25 @@ def _transform_leads_to_rows(leads):
 
 @router.get("/me/data", response_model=List[dict])
 async def list_my_leads_data(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
     user: User = Depends(current_active_user)
 ):
-    """Returns raw data for leads assigned to me."""
-    leads = await contact_service.get_my_leads(user.id, skip=skip, limit=limit)
-    return _transform_leads_to_rows(leads)
+    """Returns raw data for Client Side Grid."""
+    result = await contact_service.get_my_leads(user.id)
+    
+    # Transform items but keep structure
+    items = _transform_leads_to_rows(result)
+    
+    return items
 
 @router.get("/me", response_model=WebIAFirstResponse)
 async def get_my_leads(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
     user: User = Depends(current_active_user)
 ):
     """Returns the CRM Workview for the current user."""
-    leads = await contact_service.get_my_leads(user.id, skip=skip, limit=limit)
-    rows = _transform_leads_to_rows(leads)
+    result = await contact_service.get_my_leads(user.id)
+    rows = _transform_leads_to_rows(result)
+
+
 
     return {
         "layout": "dashboard-standard",
@@ -160,7 +161,7 @@ async def get_my_leads(
             {
                 "type": "typography",
                 "tag": "h2",
-                "text": "Mis Leads Integrales",
+                "text": "Mis Leads",
                 "class": "mb-4"
             },
             {
@@ -168,37 +169,32 @@ async def get_my_leads(
                 "size": "col-12",
                 "components": [
                     {
-                        "type": "grid-leads-control",
-                        "label": "Panel de Control de Leads",
+                        "type": "custom-leads-grid",
+                        "label": "Panel de Leads",
                         "properties": {
                             "data_url": "/leads/me/data",
                             "columns": [
-                                {"id": "identity", "label": "Lead / Calificación", "type": "gauge-identity", "sortable": True, "width": "250px"},
-                                {"id": "engagement", "label": "Engagement", "type": "scoring-pillar", "sortable": True},
-                                {"id": "finance", "label": "Finance", "type": "scoring-pillar", "sortable": True},
-                                {"id": "timeline", "label": "TimeLine", "type": "scoring-pillar", "sortable": True},
-                                {"id": "match", "label": "Match", "type": "scoring-pillar", "sortable": True},
-                                {"id": "info", "label": "Info", "type": "scoring-pillar", "sortable": True},
-                                {"id": "outcome", "label": "Outcome", "type": "scoring-pillar", "sortable": True},
-                                {"id": "workflow", "label": "Workflow", "type": "scoring-pillar", "sortable": True}
+                                {"id": "identity", "label": "Lead / Calificación", "type": "gauge-identity", "sortable": True, "width": "250px", "icon": "ri-shield-user-line"},
+                                {"id": "engagement", "label": "Engagement", "type": "scoring-pillar", "sortable": True, "icon": "ri-message-3-line"},
+                                {"id": "finance", "label": "Finance", "type": "scoring-pillar", "sortable": True, "icon": "ri-bank-line"},
+                                {"id": "timeline", "label": "TimeLine", "type": "scoring-pillar", "sortable": True, "icon": "ri-time-line"},
+                                {"id": "match", "label": "Match", "type": "scoring-pillar", "sortable": True, "icon": "ri-home-4-line"},
+                                {"id": "info", "label": "Info", "type": "scoring-pillar", "sortable": True, "icon": "ri-file-list-3-line"},
+                                {"id": "outcome", "label": "Outcome", "type": "scoring-pillar", "sortable": True, "icon": "ri-flag-line"},
+                                {"id": "workflow", "label": "Workflow", "type": "scoring-pillar", "sortable": True, "icon": "ri-git-branch-line"}
                             ],
                             "actions": [
                                 {"label": "Ver Perfil", "icon": "ri-eye-line", "action": "navigate", "url": "/leads/{id}"},
                                 {"label": "Chat", "icon": "ri-chat-3-line", "action": "navigate", "url": "/leads/{id}/chat"}
                             ]
                         },
-                        "rows": rows,
-                        "pagination": {
-                            "skip": skip,
-                            "limit": limit,
-                            "total": len(leads)
-                        }
                     }
                 ]
             }
         ],
         "permissions_required": ["leads.view"]
     }
+
 
 from fastapi import HTTPException
 
@@ -208,7 +204,7 @@ async def get_lead_detail(lead_id: UUID, user: User = Depends(current_active_use
     Returns the detailed view for a single lead.
     """
     # Fetch lead data
-    leads = await contact_service.get_my_leads(user.id, limit=100)
+    leads = await contact_service.get_my_leads(user.id)
     lead = next((l for l in leads if l['id'] == lead_id), None)
     
     if not lead:
@@ -281,7 +277,7 @@ async def get_lead_chat(lead_id: UUID, user: User = Depends(current_active_user)
     Returns the chat view for a single lead.
     """
     # Fetch lead data
-    leads = await contact_service.get_my_leads(user.id, limit=100)
+    leads = await contact_service.get_my_leads(user.id)
     lead = next((l for l in leads if l['id'] == lead_id), None)
     
     if not lead:

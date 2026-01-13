@@ -4,6 +4,8 @@
  */
 
 import { safeAtob, safeBtoa } from '../../utils/base64.js';
+import { formatters } from './formatters.js';
+import { CustomLeadsGrid } from './CustomGrid.js'; // Import new engine
 
 const API_BASE_URL = window.AppConfig.API_BASE_URL;
 window.gridInstances = {};
@@ -29,10 +31,36 @@ async function fetchGridDataForGridJs(container, params = {}) {
 }
 
 export async function hydrateGrids() {
+    // 1. Standard Grid.js Instances
     const grids = document.querySelectorAll('.js-grid-visual');
+    if (grids.length > 0) {
+        // ... (Existing Grid.js logic) ...
+        _hydrateStandardGrids(grids);
+    }
 
+    // 2. Custom Grid Instances (Beta)
+    const customGrids = document.querySelectorAll('[data-type="custom-leads-grid"]');
+    customGrids.forEach(container => {
+        if (container.dataset.initialized) return;
+        container.dataset.initialized = "true";
+
+        console.log("Hydrating Custom Grid Beta:", container.id);
+        const config = {
+            data_url: container.dataset.url,
+            columns: JSON.parse(container.dataset.columns || '[]'),
+            actions: JSON.parse(container.dataset.actions || '[]')
+        };
+
+        // Initialize Engine
+        window.gridInstances[container.id] = new CustomLeadsGrid(container, config);
+    });
+}
+
+// Renamed internal helper to keep code clean (Refactoring existing hydrateGrids logic)
+async function _hydrateStandardGrids(grids) {
     grids.forEach(async (container) => {
         if (container.dataset.initialized) return;
+        // ... rest of existing code ...
         container.dataset.initialized = "true";
 
         const gridId = container.id;
@@ -51,16 +79,15 @@ export async function hydrateGrids() {
                 sort: col.sortable !== false,
                 formatter: (cell) => {
                     if (cell === undefined || cell === null) return '-';
-                    if (col.type === 'badge') {
-                        const label = (typeof cell === 'object') ? (cell.label || cell.name || JSON.stringify(cell)) : cell;
-                        const color = (typeof cell === 'object' && cell.color) ? cell.color : (col.color || 'primary');
-                        const mapKey = String(label);
-                        const badgeColor = (col.badge_map && col.badge_map[mapKey]) ? col.badge_map[mapKey] : color;
-                        return gridjs.html(`<span class="badge bg-${badgeColor}">${label}</span>`);
+
+                    // Use external formatters
+                    if (col.type === 'badge' && formatters.badge) {
+                        return formatters.badge(cell, col);
                     }
-                    if (col.truncate && typeof cell === 'string' && cell.length > col.truncate) {
-                        return cell.substring(0, col.truncate) + '...';
+                    if (col.truncate && formatters.truncate) {
+                        return formatters.truncate(cell, col);
                     }
+
                     return cell;
                 }
             });
@@ -138,7 +165,7 @@ export async function hydrateGrids() {
         grid.render(container);
         window.gridInstances[gridId] = grid;
 
-        // Filters logic... (Condensed for now, can be modularized further)
+        // Filters logic
         const filters = JSON.parse(filtersStr);
         if (filters.length > 0) {
             setTimeout(async () => {
@@ -214,63 +241,21 @@ export function hydrateLeadsControlGrid() {
                     compare: (a, b) => {
                         const valA = (typeof a === 'object') ? (a.score || 0) : (parseInt(a) || 0);
                         const valB = (typeof b === 'object') ? (b.score || 0) : (parseInt(b) || 0);
-                        if (valA > valB) return 1;
-                        if (valA < valB) return -1;
-                        return 0;
+                        return valA - valB;
                     }
                 },
                 formatter: (cell, row) => {
                     if (cell === undefined || cell === null) return '-';
 
-                    // Scoring Pillar: Linkable Pill instead of static Icon/Label
-                    if (col.type === 'scoring-pillar') {
-                        const score = (typeof cell === 'object') ? (cell.score || 0) : (parseInt(cell) || 0);
-                        const label = (typeof cell === 'object') ? (cell.label || '-') : '-';
-                        const colorClass = (typeof cell === 'object') ? (cell.color || 'thermal-none') : 'thermal-none';
-                        const rowId = row.cells[0].data;
-
-                        return gridjs.html(`
-                            <div class="text-center" title="Score: ${score}">
-                                <a href="/leads/${rowId}" class="thermal-pill ${colorClass}">${label}</a>
-                            </div>
-                        `);
+                    // Use external formatters
+                    if (col.type === 'scoring-pillar' && formatters.scoringPillar) {
+                        return formatters.scoringPillar(cell, row, gridColumns);
                     }
-
-                    if (col.type === 'gauge-identity') {
-                        const score = (typeof cell === 'object') ? (cell.score || 0) : (parseInt(cell) || 0);
-                        const name = (typeof cell === 'object') ? (cell.name || 'S/N') : '';
-                        const rowId = row.cells[0].data;
-
-                        let color = '#475569';
-                        if (score >= 90) color = '#f06548'; // Danger
-                        else if (score >= 70) color = '#f7b84b'; // Warning
-                        else if (score >= 50) color = '#4b38b3'; // Primary
-                        else if (score >= 20) color = '#0ab39c'; // Success
-
-                        const r = 18;
-                        const c = 2 * Math.PI * r;
-                        const offset = c - (score / 100) * c;
-
-                        return gridjs.html(`
-                            <a href="/leads/${rowId}" class="d-flex align-items-center text-decoration-none shadow-none">
-                                <div class="me-3 position-relative" style="width: 44px; height: 44px; cursor: pointer;">
-                                    <svg width="44" height="44" viewBox="0 0 44 44">
-                                        <circle cx="22" cy="22" r="${r}" fill="none" stroke="currentColor" stroke-width="3" style="opacity: 0.1"></circle>
-                                        <circle cx="22" cy="22" r="${r}" fill="none" stroke="${color}" stroke-width="3" 
-                                            stroke-dasharray="${c}" stroke-dashoffset="${offset}" 
-                                            stroke-linecap="round" transform="rotate(-90 22 22)"></circle>
-                                        <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="11" font-weight="600" fill="currentColor">${score}</text>
-                                    </svg>
-                                </div>
-                                <div><h6 class="mb-0 fs-14 fw-medium text-body">${name}</h6></div>
-                            </a>
-                        `);
+                    if (col.type === 'gauge-identity' && formatters.gaugeIdentity) {
+                        return formatters.gaugeIdentity(cell, row, gridColumns);
                     }
-
-                    if (col.type === 'badge') {
-                        const label = (typeof cell === 'object') ? (cell.label || cell.name || JSON.stringify(cell)) : cell;
-                        const color = (typeof cell === 'object' && cell.color) ? cell.color : (col.color || 'primary');
-                        return gridjs.html(`<span class="badge bg-${color}-subtle text-${color} border border-${color}-subtle px-2 py-1">${label}</span>`);
+                    if (col.type === 'badge' && formatters.badge) {
+                        return formatters.badge(cell, col);
                     }
 
                     return cell;
@@ -302,24 +287,82 @@ export function hydrateLeadsControlGrid() {
 
         const grid = new gridjs.Grid({
             columns: gridColumns,
-            sort: true,
-            pagination: { limit: 10 },
             style: {
                 table: { 'white-space': 'nowrap' },
                 th: { 'background-color': 'var(--vz-light)', 'color': 'var(--vz-body-color)', 'font-weight': '600', 'border-color': 'var(--vz-border-color)' }
             },
-            data: async () => {
-                if (preloadedRows.length > 0) return preloadedRows.map(item => gridColumns.map(col => item[col.id]));
-                if (dataUrl) {
-                    const rawData = await fetchGridDataForGridJs(el);
-                    return rawData.map(item => gridColumns.map(col => item[col.id]));
-                }
-                return [];
+            pagination: {
+                limit: 10
+            },
+            sort: {
+                multiColumn: false
+            },
+            data: () => {
+                if (!dataUrl) return Promise.resolve([]);
+                return fetch(`${API_BASE_URL}${dataUrl}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
+                })
+                    .then(res => res.json())
+                    .then(data => data.map(item => gridColumns.map(col => item[col.id])));
             }
         });
 
         el.innerHTML = '';
+        // Debug Visualizer with Atomic Copy
+        const debugId = `debug-${el.id}`;
+        if (!document.getElementById(debugId)) {
+            const debugEl = document.createElement('div');
+            debugEl.id = debugId;
+            debugEl.style.cssText = "background: #ffecb3; padding: 8px; font-size: 11px; margin-bottom: 5px; border: 1px solid #ffca28; color: #333; font-family: monospace; display: flex; justify-content: space-between; align-items: center;";
+            debugEl.innerHTML = `
+                <span id="${debugId}-text"><strong>DEBUG MODE:</strong> Waiting...</span>
+                <button onclick="window.copyDebugInfo('${debugId}-text')" style="background:#00bd9d; color:white; border:none; padding:2px 8px; font-weight:bold; cursor:pointer; font-size:10px;">COPY INFO</button>
+            `;
+            el.parentNode.insertBefore(debugEl, el);
+        }
+
+        // Poll grid state every 500ms
+        setInterval(() => {
+            const dText = document.getElementById(`${debugId}-text`);
+            if (dText) {
+                try {
+                    const activeBtn = el.querySelector('.gridjs-pagination .gridjs-currentPage');
+                    const visualPager = activeBtn ? activeBtn.innerText : 'None';
+                    const firstRow = el.querySelector('tbody tr:first-child td:nth-child(2)');
+                    const firstVal = firstRow ? firstRow.innerText : '-';
+                    dText.innerHTML = `<strong>DEBUG:</strong> Pager: <b>${visualPager}</b> | Top Cell: <b>${firstVal}</b> | Rows: <b>${el.querySelectorAll('tbody tr').length}</b>`;
+                } catch (e) {
+                    dText.innerHTML = `DEBUG ERROR: ${e.message}`;
+                }
+            }
+        }, 500);
+
+        // Robust Sort Sync
+        grid.on('sort', () => {
+            // Force reset of pagination state when sorting
+            const state = grid.config.store.getState();
+            if (state.pagination && state.pagination.page !== 0) {
+                // Explicitly update config and FORCE render to ensure pipeline re-runs
+                console.log('[Grid] Sorting detected on inner page, resetting to Page 1');
+                setTimeout(() => {
+                    grid.updateConfig({
+                        pagination: { page: 0, limit: 10 }
+                    }).forceRender();
+                }, 100);
+            }
+        });
+
         grid.render(el);
+
+
+
+
+
+
+        // Register instance for global refreshes
+
+        const gridId = el.id || `grid-control-${Math.random().toString(36).substr(2, 9)}`;
+        window.gridInstances[gridId] = grid;
     });
 }
 
@@ -331,3 +374,45 @@ export async function refreshGrids() {
 }
 
 window.refreshGrids = refreshGrids;
+
+// Robust Copy Function (Works on HTTP/Non-Secure)
+window.copyDebugInfo = function (id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const text = el.innerText;
+
+    // Method 1: Modern API (Try first)
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => showFeedback(id)).catch(() => useFallback(text, id));
+    } else {
+        useFallback(text, id);
+    }
+};
+
+function useFallback(text, id) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) showFeedback(id);
+        else console.error('Fallback copy command failed');
+    } catch (err) {
+        console.error('Fallback copy failed', err);
+    }
+    document.body.removeChild(textArea);
+}
+
+function showFeedback(id) {
+    const parent = document.getElementById(id).parentElement;
+    const btn = parent ? parent.querySelector('button') : null;
+    if (btn) {
+        const original = btn.innerText;
+        btn.innerText = 'COPIED!';
+        setTimeout(() => btn.innerText = original, 2000);
+    }
+}

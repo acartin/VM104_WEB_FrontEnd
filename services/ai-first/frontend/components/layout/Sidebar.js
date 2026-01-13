@@ -1,4 +1,5 @@
 export function LinkSidebar(data) {
+    console.log("[Sidebar] Rendering with data:", data); // DEBUG
     const menuItemsHtml = (data.items || [])
         .map(item => MenuItem(item))
         .join('');
@@ -23,7 +24,9 @@ export function LinkSidebar(data) {
                     <div id="two-column-menu"></div>
                     <ul class="navbar-nav" id="navbar-nav">
                         <li class="menu-title"><span data-key="t-menu">Menu</span></li>
+
                         ${menuItemsHtml}
+
                     </ul>
                 </div>
             </div>

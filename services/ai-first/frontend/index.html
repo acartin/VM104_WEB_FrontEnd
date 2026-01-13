@@ -148,7 +148,7 @@
             align-items: center;
             justify-content: center;
             width: 105px;
-            height: 24px;
+            height: 22px;
             font-size: 9px;
             font-weight: 800;
             text-transform: uppercase;
@@ -173,6 +173,16 @@
 
         [data-theme="light"] .thermal-pill:hover {
             background-color: color-mix(in srgb, currentColor, transparent 92%);
+        }
+
+        /* 📏 Ultra-Compact Table */
+        .js-grid-leads-control .gridjs-td,
+        .js-grid-leads-control .gridjs-th {
+            padding: 6px 12px !important;
+        }
+
+        .js-grid-leads-control .gridjs-table {
+            border-collapse: collapse !important;
         }
     </style>
 </head>
@@ -212,7 +222,7 @@
             window.location.href = 'login.html';
         }
     </script>
-    <script type="module" src="/renderer/main.js?v=63"></script>
+    <script type="module" src="/renderer/main.js?v=68"></script>
 </body>
 
 </html>

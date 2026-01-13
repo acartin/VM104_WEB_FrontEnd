@@ -22,7 +22,7 @@ async def get_client_user_dashboard(current_user: User = Depends(current_active_
     client_id = current_user.tenants[0].client_id
     
     # 1. Fetch Data (Isolated to the current seller)
-    assigned_leads = await contact_service.get_my_leads(current_user.id, limit=20)
+    assigned_leads = await contact_service.get_my_leads(current_user.id)
     appointments = await contact_service.get_my_appointments(current_user.id)
     
     # Simple Stats for the seller

@@ -8,7 +8,7 @@ async def verify_leads_me():
     # User ID: e18b47ae-4067-420d-861b-7f732409ade4
     user = User(id=UUID('e18b47ae-4067-420d-861b-7f732409ade4'), email='cocacola-admin@cocacola.com')
     
-    response = await get_my_leads(skip=0, limit=50, user=user)
+    response = await get_my_leads(user=user)
     
     print("\n--- LEADS/ME ENDPOINT VERIFICATION ---")
     print(f"Layout: {response['layout']}")

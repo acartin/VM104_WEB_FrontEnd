@@ -16,7 +16,28 @@ import { LinkProjectBanner } from '../../components/layout/ProjectBanner.js';
 import { LinkCard } from '../../components/ui/Card.js';
 import { LinkMemberListCard, LinkGenericCard, LinkFileGrid, LinkContactListDetailed } from '../../components/cards/DashboardWidgets.js';
 
+// Simple Wrapper for Custom Grid Container
+export function LinkCustomGridContainer(component) {
+    const props = component.properties || {};
+    return `
+        <div id="grid-custom-${Math.random().toString(36).substr(2, 9)}"
+             class="card h-100 shadow-sm"
+             data-type="custom-leads-grid"
+             data-url="${props.data_url}"
+             data-columns='${JSON.stringify(props.columns || [])}'
+             data-actions='${JSON.stringify(props.actions || [])}'>
+             <div class="card-body p-3">
+                <!-- Engine will hydrate here -->
+                <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                    <span class="spinner-border text-primary me-2"></span> Initializing Beta Engine...
+                </div>
+             </div>
+        </div>
+    `;
+}
+
 const registry = {
+    'custom-leads-grid': LinkCustomGridContainer, // Beta Engine
     'card': LinkCard,
     'card-metric': LinkMetricCard,
     'grid': LinkGridContainer,

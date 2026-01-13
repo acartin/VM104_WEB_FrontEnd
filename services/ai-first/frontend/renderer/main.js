@@ -3,10 +3,10 @@
  * Strictly follows 'visual_dictionary.json' and 'catalog_context.json'
  */
 
-import { renderContent, renderComponent } from './modules/registry.js';
+import { renderContent, renderComponent } from './engine/registry.js';
 export { renderContent, renderComponent };
-import { hydrateGrids, hydrateLeadsControlGrid } from './modules/hydration.js';
-import './modules/actions.js'; // Attaches handlers to window
+import { hydrateGrids, hydrateLeadsControlGrid } from './engine/hydration.js';
+import './engine/actions.js'; // Attaches handlers to window
 
 import { LinkAppShell } from '../components/layout/AppShell.js';
 import { LinkSidebar } from '../components/layout/Sidebar.js';
@@ -14,8 +14,8 @@ import { LinkNavbar } from '../components/layout/Navbar.js';
 import { LinkProjectBanner } from '../components/layout/ProjectBanner.js';
 
 const API_BASE_URL = window.AppConfig.API_BASE_URL;
-const RENDERER_VERSION = "63";
-console.log(`[Renderer] v${RENDERER_VERSION} Modular Initializing...`);
+const RENDERER_VERSION = "68";
+console.log(`[Renderer] v${RENDERER_VERSION} Modular Initializing... (REGISTRY FIX)`);
 
 window.appState = { currentPath: null };
 
@@ -24,7 +24,17 @@ async function init() {
     try {
         const token = localStorage.getItem('access_token');
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-        const response = await fetch(`${API_BASE_URL}/app-init`, { headers });
+
+        // Timeout Promise
+        const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Connection timed out. Backend is unresponsive.')), 5000)
+        );
+
+        // Race fetch against timeout
+        const response = await Promise.race([
+            fetch(`${API_BASE_URL}/app-init`, { headers }),
+            timeout
+        ]);
 
         if (response.status === 401) {
             window.location.href = 'login.html';
@@ -34,6 +44,7 @@ async function init() {
 
         const appData = await response.json();
 
+        // Normal Boot Process...
         if (appData.layout === 'dashboard-shell') {
             if (appData.content) appData.contentHtml = renderContent(appData.content);
             const shellHtml = LinkAppShell(appData);
@@ -53,14 +64,23 @@ async function init() {
                 hydrateGrids();
                 hydrateLeadsControlGrid();
             }
-        } else if (appRoot) {
-            appRoot.innerHTML = renderContent(appData.components);
-            hydrateGrids();
-            hydrateLeadsControlGrid();
         }
     } catch (error) {
         console.error('Render Error:', error);
-        if (appRoot) appRoot.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+        // EMERGENCY MODE UI
+        document.body.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#222; color:#fff; font-family:sans-serif;">
+                <h1 style="color:#ff6b6b">⚠️ EMERGENCY MODE</h1>
+                <p>The Application failed to initialize.</p>
+                <div style="background:#334; padding:15px; border-radius:5px; margin:20px 0; width: 80%; max-width: 800px;">
+                    <textarea readonly style="width:100%; height:150px; background:#111; color:#ffeb3b; border:1px solid #555; padding:10px; font-family:monospace; font-size:12px; resize:none;">${(error.stack || error.message || JSON.stringify(error) || "Unknown Error")}</textarea>
+                    <button type="button" onclick="navigator.clipboard.writeText(this.previousElementSibling.value); this.innerText='COPIED!'" style="display:block; width:100%; margin-top:10px; padding:10px; background:#00bd9d; color:#fff; font-weight:bold; border:none; border-radius:4px; cursor:pointer;">COPY ERROR TO CLIPBOARD</button>
+                </div>
+                <button onclick="window.location.reload()" style="padding:10px 20px; background:#4b38b3; color:white; border:none; border-radius:4px; cursor:pointer;">
+                    Retry Connection
+                </button>
+            </div>
+        `;
     }
 }
 

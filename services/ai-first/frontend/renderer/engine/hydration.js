@@ -6,6 +6,7 @@
 import { safeAtob, safeBtoa } from '../../utils/base64.js';
 import { formatters } from './formatters.js';
 import { CustomLeadsGrid } from './CustomGrid.js'; // Import new engine
+import { GridFilters } from './GridFilters.js'; // Import GridFilters module
 
 const API_BASE_URL = window.AppConfig.API_BASE_URL;
 window.gridInstances = {};
@@ -46,10 +47,15 @@ export async function hydrateGrids() {
 
         console.log("Hydrating Custom Grid Beta:", container.id);
         const config = {
+            grid_id: container.dataset.gridId || 'default',
             data_url: container.dataset.url,
             columns: JSON.parse(container.dataset.columns || '[]'),
-            actions: JSON.parse(container.dataset.actions || '[]')
+            actions: JSON.parse(container.dataset.actions || '[]'),
+            enableFilters: container.dataset.enableFilters === 'true',
+            filterConfig: JSON.parse(container.dataset.filterConfig || '{}')
         };
+
+        console.log('[Hydration] Grid config:', config);
 
         // Initialize Engine
         window.gridInstances[container.id] = new CustomLeadsGrid(container, config);

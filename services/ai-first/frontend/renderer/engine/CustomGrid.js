@@ -6,6 +6,8 @@
  * - Custom Sorting for "Scoring Pillars"
  * - Lightweight Pagination
  */
+import { GridFilters } from './GridFilters.js';
+
 export class CustomLeadsGrid {
     constructor(container, config) {
         this.container = container;
@@ -24,6 +26,14 @@ export class CustomLeadsGrid {
             console.warn("CustomGrid: Container has no ID, sorting will fail.");
         }
 
+        // Initialize GridFilters if enabled
+        if (this.config.enableFilters) {
+            console.log('[CustomGrid] Initializing GridFilters', this.config.filterConfig);
+            this.filters = new GridFilters(this);
+        } else {
+            console.log('[CustomGrid] Filters disabled or not configured');
+        }
+
         // Render Skeleton immediately
         this.renderSkeleton();
         this.init();
@@ -32,6 +42,12 @@ export class CustomLeadsGrid {
     async init() {
         try {
             await this.fetchData();
+
+            // Render filter bar if filters are enabled
+            if (this.filters) {
+                this.filters.renderFilterBar();
+            }
+
             this.applySort(); // Initial sort if any
             this.render();
         } catch (e) {
@@ -133,9 +149,19 @@ export class CustomLeadsGrid {
 
         let val;
 
-        // 1. Scoring Pillars (Unwrap object to get numeric score)
+        // 1. Scoring Pillars - Special handling for contact_preference and status
         if (col.type === 'scoring-pillar') {
             const cellData = row[col.id];
+
+            // For 'contact_preference' and 'status', sort by label text (alphabetically)
+            if (col.id === 'contact_preference' || col.id === 'status') {
+                if (cellData && typeof cellData === 'object') {
+                    return (cellData.label || '').toLowerCase();
+                }
+                return '';
+            }
+
+            // For other scoring pillars (engagement, finance, etc.), sort by numeric score
             if (cellData && typeof cellData === 'object') {
                 // Try 'score', 'puntuacion', or 'value'
                 val = cellData.score ?? cellData.puntuacion ?? cellData.value;
@@ -157,12 +183,7 @@ export class CustomLeadsGrid {
             return Number(row.score_total) || 0;
         }
 
-        // 3. Status Object (Sort by label text)
-        if (col.id === 'status' && typeof row.status === 'object') {
-            return (row.status.label || '').toLowerCase();
-        }
-
-        // 4. Default Handling
+        // 3. Default Handling
         val = row[col.id];
         if (typeof val === 'string') return val.toLowerCase();
         if (typeof val === 'number') return val;
@@ -218,7 +239,7 @@ export class CustomLeadsGrid {
             // Replicate the Layout: Score Circle + Name + Email
             const identity = row.identity || {};
             const score = identity.score || 0;
-            const name = identity.name || row.full_name || 'Unknown';
+            const name = identity.name || row.full_name || '';
             const email = row.email || '-';
             // Use backend-provided Bootstrap semantic color (e.g. 'danger', 'warning')
             const colorClass = identity.color || 'secondary';
@@ -238,18 +259,25 @@ export class CustomLeadsGrid {
             `;
         }
         if (col.type === 'scoring-pillar') {
-            // Data is in nested object: row[col.id] = { label, color, score, ... }
+            // Data is in nested object: row[col.id] = { label, color, score, icon, ... }
             const item = row[col.id] || {};
-            const label = item.label || 'N/A';
+            const label = item.label || null;
             const colorClass = item.color || 'secondary'; // Bootstrap semantic name from DB
+            const icon = item.icon || '';
 
-            // Use Bootstrap utility classes for theme-aware coloring
-            return `<span class="badge-pill-custom text-${colorClass} border border-${colorClass}">${label.toUpperCase()}</span>`;
-        }
+            // Special rendering for 'contact_preference' and 'status' columns: show icon + label
+            if (col.id === 'contact_preference' || col.id === 'status') {
+                // Handle null/undefined labels
+                if (!label) {
+                    return `<span class="text-muted fst-italic">-</span>`;
+                }
+                const iconHtml = icon ? `<i class="${icon} me-2 align-middle fs-22 text-${colorClass}"></i>` : '';
+                return `<span class="d-inline-flex align-items-center">${iconHtml}<span class="text-body fw-normal">${label}</span></span>`;
+            }
 
-        // Handle Status Object if present
-        if (col.id === 'status' && typeof row.status === 'object') {
-            return `<span class="badge bg-${row.status.color || 'primary'}">${row.status.label || 'New'}</span>`;
+            // Default rendering for other scoring pillars (Interés, Finanzas, etc.)
+            const displayLabel = label || '-';
+            return `<span class="badge-pill-custom text-${colorClass} border border-${colorClass}">${displayLabel.toUpperCase()}</span>`;
         }
 
         return row[col.id] || '-';

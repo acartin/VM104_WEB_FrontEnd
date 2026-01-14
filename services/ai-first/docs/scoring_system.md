@@ -409,8 +409,35 @@ UPDATE lead_leads SET score_total = score_total;
 -- Esto dispara el trigger y reasigna las definiciones
 ```
 
----
+--- Estatus e Intención
+Las columnas Status(workflow) e Intención (Outcome) en el panel de leads tienen objetivos distintos para clasificar el estado y la intención de cada prospecto:
 
-**Última actualización:** 2026-01-02  
-**Versión del Sistema:** 1.0  
-**Autor:** Lead Intelligence Team
+1. Estatus (Estado Operacional)
+Esta columna representa la etapa del ciclo de vida del lead dentro de tu proceso comercial. Responde a la pregunta: ¿En qué punto de nuestro proceso interno se encuentra este lead?
+
+Mapeo técnico: Está vinculada al modelo LeadStatus (definido en 
+LeadStatus.php). Y es inicializada en la bd
+
+Valores comunes: "New" (Nuevo), "Contacted" (Contactado), "Qualified" (Calificado), "Won" (Ganado) o "Lost" (Perdido).
+Objetivo: Gestionar la operación diaria y saber qué leads requieren atención según su progreso en el embudo de ventas.
+
+Esencialmente es el estatus del lead en el embudo de ventas.
+
+2. Outcome (Intención / Resultado de Interacción)
+Dato generado por la IA en el momento de la creación del lead.
+Esta columna identifica el objetivo final o el interés determinado tras la interacción inicial Responde a la pregunta: ¿Qué es lo que el lead quiere o cuál fue el resultado de la conversación?
+
+Mapeo técnico: Está vinculada a la tabla lead_contact_preferences (definido en 
+ContactPreference.php
+).
+Valores comunes: "Meeting Pending" (Cita pendiente), "Voice Call" (Llamada de voz), "Chat / Messenger", "Email info", etc.
+Objetivo: Clasificar el resultado de la interacción. Mientras que el Workflow te dice que el lead está "Calificado", el Outcome te especifica que ese lead calificado está esperando una "Llamada de voz" o una "Cita".
+En resumen: Workflow es el estado de tu proceso interno, mientras que Outcome es la intención o el paso siguiente solicitado por el lead.
+
+
+Intención: El Bot lo setea en la bd como  basándose en el análisis de la conversación (IA). Si el lead pidió una llamada, el bot lo marcará como "Voice Call"; si agendó una cita, como "Meeting Pending", etc.
+2. Cambios de Estado (Evolución)
+Una vez que el lead ya está en el sistema, la responsabilidad recae principalmente en el Agente Humano (Vendedor/Admin):
+
+Estado: El Agente cambia este estado manualmente a medida que avanza en su gestión (pasándolo de "New" a "Contacted", "Qualified", "Won" o "Lost"). Es la herramienta del vendedor para medir su progreso.
+Intención: Aunque el Bot lo setea al inicio, el Agente puede cambiarlo si durante el seguimiento descubre que el lead prefiere otra vía (por ejemplo, el lead pidió chat, pero luego de hablar prefiere una "Video Call").

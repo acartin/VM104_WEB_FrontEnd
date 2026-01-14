@@ -70,7 +70,7 @@ def _transform_leads_to_rows(leads):
         rows.append({
             "id": str(l['id']),
             "identity": {
-                "name": l['full_name'] or "S/N",
+                "name": l['full_name'] or "",
                 "score": l['score_total'] or 0,
                 "color": l.get('prio_color') or "thermal-none"
             },
@@ -109,26 +109,22 @@ def _transform_leads_to_rows(leads):
                 "icon": l.get('inf_icon') or "ri-file-list-3-line",
                 "color": l.get('inf_color') or "thermal-none"
             },
-            "outcome": {
+            "contact_preference": {
                 "score": 0,
                 "totalScore": l.get('score_total', 0),
-                "label": l.get('out_label') or "PENDIENTE",
-                "icon": l.get('out_icon') or "ri-flag-line",
-                "color": l.get('out_color') or "thermal-none"
+                "label": l.get('cp_label'),
+                "icon": l.get('cp_icon') or "ri-question-line",
+                "color": l.get('cp_color') or "thermal-none"
             },
-            "workflow": {
+            "status": {
                 "score": 0,
                 "totalScore": l.get('score_total', 0),
-                "label": l.get('wf_label') or "ACTIVO",
-                "icon": l.get('wf_icon') or "ri-git-branch-line",
-                "color": l.get('wf_color') or "thermal-none"
+                "label": l.get('status_label'),
+                "icon": l.get('status_icon') or "ri-git-branch-line",
+                "color": l.get('status_color') or "info"
             },
             "email": l['email'] or "-",
             "phone": l['phone'] or "-",
-            "status": {
-                "label": l['status'] or "Nuevo",
-                "color": "primary" if l['status'] == 'Follow-up' else "info"
-            },
             "created": l['created_at'].strftime("%Y-%m-%d") if l['created_at'] else "-"
         })
     return rows
@@ -172,16 +168,30 @@ async def get_my_leads(
                         "type": "custom-leads-grid",
                         "label": "Panel de Leads",
                         "properties": {
+                            "grid_id": "leads-me",
                             "data_url": "/leads/me/data",
+                            "enableFilters": True,
+                            "filterConfig": {
+                                "searchFields": ["full_name", "email"],
+                                "filterableColumns": [
+                                    {"id": "engagement", "label": "Interés", "icon": "ri-message-3-line"},
+                                    {"id": "finance", "label": "Finanzas", "icon": "ri-bank-line"},
+                                    {"id": "timeline", "label": "Urgencia", "icon": "ri-time-line"},
+                                    {"id": "match", "label": "Match", "icon": "ri-home-4-line"},
+                                    {"id": "info", "label": "Info", "icon": "ri-file-list-3-line"},
+                                    {"id": "contact_preference", "label": "Intención", "icon": "ri-flag-line"},
+                                    {"id": "status", "label": "Estado", "icon": "ri-git-branch-line"}
+                                ]
+                            },
                             "columns": [
                                 {"id": "identity", "label": "Lead / Calificación", "type": "gauge-identity", "sortable": True, "width": "250px", "icon": "ri-shield-user-line"},
-                                {"id": "engagement", "label": "Engagement", "type": "scoring-pillar", "sortable": True, "icon": "ri-message-3-line"},
-                                {"id": "finance", "label": "Finance", "type": "scoring-pillar", "sortable": True, "icon": "ri-bank-line"},
-                                {"id": "timeline", "label": "TimeLine", "type": "scoring-pillar", "sortable": True, "icon": "ri-time-line"},
+                                {"id": "engagement", "label": "Interés", "type": "scoring-pillar", "sortable": True, "icon": "ri-message-3-line"},
+                                {"id": "finance", "label": "Finanzas", "type": "scoring-pillar", "sortable": True, "icon": "ri-bank-line"},
+                                {"id": "timeline", "label": "Urgencia", "type": "scoring-pillar", "sortable": True, "icon": "ri-time-line"},
                                 {"id": "match", "label": "Match", "type": "scoring-pillar", "sortable": True, "icon": "ri-home-4-line"},
                                 {"id": "info", "label": "Info", "type": "scoring-pillar", "sortable": True, "icon": "ri-file-list-3-line"},
-                                {"id": "outcome", "label": "Outcome", "type": "scoring-pillar", "sortable": True, "icon": "ri-flag-line"},
-                                {"id": "workflow", "label": "Workflow", "type": "scoring-pillar", "sortable": True, "icon": "ri-git-branch-line"}
+                                {"id": "contact_preference", "label": "Intención", "type": "scoring-pillar", "sortable": True, "icon": "ri-flag-line"},
+                                {"id": "status", "label": "Estado", "type": "scoring-pillar", "sortable": True, "icon": "ri-git-branch-line"}
                             ],
                             "actions": [
                                 {"label": "Ver Perfil", "icon": "ri-eye-line", "action": "navigate", "url": "/leads/{id}"},
@@ -225,7 +235,7 @@ async def get_lead_detail(lead_id: UUID, user: User = Depends(current_active_use
                                 "title": "Información del Lead",
                                 "components": [
                                     {"type": "typography", "tag": "h4", "text": lead['full_name'], "class": "mb-1"},
-                                    {"type": "typography", "tag": "p", "text": f"Status: {lead['status'] or 'Nuevo'}", "class": "text-muted mb-3"},
+                                    {"type": "typography", "tag": "p", "text": f"Status: {lead.get('status_label') or 'Nuevo'}", "class": "text-muted mb-3"},
                                     {"type": "typography", "tag": "p", "text": f"Email: {lead['email'] or '-'}"},
                                     {"type": "typography", "tag": "p", "text": f"Tel: {lead['phone'] or '-'}"}
                                 ]

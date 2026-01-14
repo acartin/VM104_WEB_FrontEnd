@@ -17,6 +17,7 @@ from app.modules.roles.router import router as roles_router
 from app.modules.contacts.router import router as contacts_router
 from app.modules.leads.router import router as leads_router
 from app.modules.campaigns.router import router as campaigns_router
+from app.modules.grid_presets.router import router as grid_presets_router
 from app.dashboards.client_user_dash.router import router as client_user_router
 
 app = FastAPI(title="Web IAFirst Operational API")
@@ -69,6 +70,7 @@ app.include_router(auth_router) # Tags are defined inside the router
 app.include_router(users_router)
 app.include_router(roles_router)
 app.include_router(contacts_router, tags=["Contacts"])
+app.include_router(grid_presets_router)
 
 # Mount Frontend (Must be last to avoid overriding API routes)
 FRONTEND_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend"))

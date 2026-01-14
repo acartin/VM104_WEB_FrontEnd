@@ -34,7 +34,7 @@ export const formatters = {
      */
     gaugeIdentity: (cell, row, gridColumns) => {
         const score = (typeof cell === 'object') ? (cell.score || 0) : (parseInt(cell) || 0);
-        const name = (typeof cell === 'object') ? (cell.name || 'S/N') : '';
+        const name = (typeof cell === 'object') ? (cell.name || '') : '';
         const rowId = getRowId(row, gridColumns);
 
         let color = '#475569';

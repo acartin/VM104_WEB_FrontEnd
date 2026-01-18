@@ -1,4 +1,4 @@
-import { renderComponent } from '../../renderer/main.js';
+import { renderComponent } from '../../renderer/engine/registry.js';
 
 export function LinkRow(data) {
     const childrenHtml = (data.components || [])

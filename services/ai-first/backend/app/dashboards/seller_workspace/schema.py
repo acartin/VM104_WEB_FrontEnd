@@ -123,117 +123,105 @@ def get_lead_detail_schema(user_id: str, lead_id: str, lead: dict) -> ClientUser
     
     # Get initials for avatar
     initials = ''.join([n[0].upper() for n in full_name.split()[:2]]) if full_name != 'Sin Nombre' else 'L'
+
+    # Score Components using new Frontend Renderer
+    score_components = [
+        DashboardComponent(type="score-row", properties={
+            "title": "Interés", "score": lead.get('score_engagement') or 0, "max_score": 30, 
+            "icon": lead.get('eng_icon'), "color": lead.get('eng_color', 'primary'), "label": lead.get('eng_label') or '-'
+        }),
+        DashboardComponent(type="score-row", properties={
+            "title": "Finanzas", "score": lead.get('score_finance') or 0, "max_score": 30, 
+            "icon": lead.get('fin_icon'), "color": lead.get('fin_color', 'primary'), "label": lead.get('fin_label') or '-'
+        }),
+        DashboardComponent(type="score-row", properties={
+            "title": "Urgencia", "score": lead.get('score_timeline') or 0, "max_score": 30, 
+            "icon": lead.get('tim_icon'), "color": lead.get('tim_color', 'primary'), "label": lead.get('tim_label') or '-'
+        }),
+        DashboardComponent(type="score-row", properties={
+            "title": "Match", "score": lead.get('score_match') or 0, "max_score": 30, 
+            "icon": lead.get('mat_icon'), "color": lead.get('mat_color', 'primary'), "label": lead.get('mat_label') or '-'
+        }),
+        DashboardComponent(type="score-row", properties={
+            "title": "Calidad", "score": lead.get('score_info') or 0, "max_score": 30, 
+            "icon": lead.get('inf_icon'), "color": lead.get('inf_color', 'primary'), "label": lead.get('inf_label') or '-'
+        })
+    ]
+
+    # Contact Info Components
+    contact_components = [
+        DashboardComponent(type="info-row", properties={
+            "label": "Teléfono", "value": lead.get('phone') or '-', 
+            "icon": "ri-phone-line", "color": "success"
+        }),
+        DashboardComponent(type="info-row", properties={
+            "label": "Email", "value": lead.get('email') or '-',
+            "icon": "ri-mail-line", "color": "warning"
+        }),
+        DashboardComponent(type="info-row", properties={
+            "label": "Intención", "value": lead.get('cp_label') or 'No definida',
+            "icon": lead.get('cp_icon') or "ri-chat-1-line", "color": lead.get('cp_color', 'primary')
+        }),
+        DashboardComponent(type="info-row", properties={
+            "label": "Registrado", "value": lead.get('created_at').strftime('%d %b, %Y') if lead.get('created_at') else '-',
+            "icon": "ri-calendar-line", "color": "info", "last": True
+        })
+    ]
     return ClientUserDashboardSchema(
         layout="dashboard-standard",
         debug_data=lead,
         components=[
-            # Link to return to main dashboard
+            # Back to Dashboard
             DashboardComponent(
-                type="row", class_="mb-3",
-                components=[
-                    DashboardComponent(
-                        type="typography", 
-                        text=f"<a href='/dashboard' class='text-decoration-none text-muted'><i class='ri-arrow-left-line me-1'></i> Volver al Dashboard</a>", 
-                        tag="div"
-                    )
-                ]
+                type="back-link",
+                properties={"text": "Volver", "fallback_url": "/leads/me"}
             ),
             # Banner Card (Profile Header)
             DashboardComponent(
-                type="card",
-                class_="mb-3",
-                components=[
-                    DashboardComponent(
-                        type="row",
-                        class_="align-items-center",
-                        components=[
-                            DashboardComponent(
-                                type="col", class_="col-6",
-                                components=[
-                                    # Top area: Gauge + Name (horizontal)
-                                    DashboardComponent(
-                                        type="row", class_="align-items-center mb-3",
-                                        components=[
-                                            DashboardComponent(
-                                                type="col", class_="col-auto",
-                                                components=[
-                                                    DashboardComponent(
-                                                        type="gauge",
-                                                        properties={
-                                                            "value": score_total,
-                                                            "size": 60,
-                                                            "color": lead.get('prio_color')
-                                                        }
-                                                    )
-                                                ]
-                                            ),
-                                            DashboardComponent(
-                                                type="col", class_="col",
-                                                components=[
-                                                    DashboardComponent(type="typography", text=full_name, tag="h4", class_="mb-0")
-                                                ]
-                                            )
-                                        ]
-                                    ),
-                                    # Details area
-                                    DashboardComponent(type="typography", text=f"<p class='mb-2' style='color: #6c757d;'>{email} • {phone}</p>", tag="div"),
-                                    DashboardComponent(type="typography", text=f"<span class='badge bg-{status_color}'>{status_label}</span>", tag="div", class_="mb-3"),
-                                    DashboardComponent(
-                                        type="button-group",
-                                        properties={
-                                            "buttons": [
-                                                {"label": "Llamar", "icon": "ri-phone-line", "class": "btn-soft-success"},
-                                                {"label": "Email", "icon": "ri-mail-line", "class": "btn-soft-warning"},
-                                                {"label": "Más", "icon": "ri-more-2-fill", "class": "btn-ghost-secondary"}
-                                            ]
-                                        }
-                                    )
-                                ]
-                            ),
-                            DashboardComponent(
-                                type="col", class_="col-6",
-                                components=[
-                                    # Columna vacía
-                                ]
-                            )
-                        ]
-                    )
-                ]
+                type="profile-header",
+                properties={
+                    "full_name": full_name,
+                    "email": email,
+                    "phone": phone,
+                    "score_value": score_total,
+                    "score_color": lead.get('prio_color'),
+                    "intent_label": lead.get('cp_label'),
+                    "intent_color": lead.get('cp_color', 'primary'),
+                    "intent_icon": lead.get('cp_icon'),
+                    "status_label": lead.get('status_label'),
+                    "status_color": lead.get('status_color', 'warning'),
+                    "status_icon": lead.get('status_icon')
+                }
             ),
             
             # Tabs (Información, Audit, Fuente)
             DashboardComponent(
                 type="tabs",
+                class_="border-0 shadow-none",
                 items=[
                     {
                         "id": "tab-info", "label": "Información", "icon": "ri-information-line", "active": True,
                         "content": [
                             DashboardComponent(
-                                type="row",
+                                type="card",
+                                class_="border-0 shadow-none",
                                 components=[
                                     DashboardComponent(
-                                        type="col", size=6,
+                                        type="row",
+                                        class_="border-0",
                                         components=[
-                                            DashboardComponent(
-                                                type="card",
-                                                title="Datos del Perfil",
-                                                components=[
-                                                    DashboardComponent(type="typography", text="<div class='p-4 text-center text-muted'>Contenido Columna 1</div>", tag="div")
-                                                ]
-                                            )
-                                        ]
-                                    ),
+                                    # Column 1: Profile & Contact
+                                    # Column 1: Profile & Contact
                                     DashboardComponent(
                                         type="col", size=6,
-                                        components=[
-                                            DashboardComponent(
-                                                type="card",
-                                                title="Actividad y Calificación",
-                                                components=[
-                                                    DashboardComponent(type="typography", text="<div class='p-4 text-center text-muted'>Contenido Columna 2</div>", tag="div")
-                                                ]
-                                            )
-                                        ]
+                                        components=contact_components
+                                    ),
+                                    # Column 2: Detailed Scoring (Redesigned Grid)
+                                    DashboardComponent(
+                                        type="col", size=6,
+                                        components=score_components
+                                    )
+                                ]
                                     )
                                 ]
                             )
@@ -245,7 +233,14 @@ def get_lead_detail_schema(user_id: str, lead_id: str, lead: dict) -> ClientUser
                             DashboardComponent(
                                 type="card",
                                 components=[
-                                    DashboardComponent(type="typography", text="<div class='p-5 text-center text-muted'><h4>Historial de Cambios</h4><p>El audit trail se mostrará aquí.</p></div>", tag="div")
+                                    DashboardComponent(
+                                        type="empty-state",
+                                        properties={
+                                            "title": "Historial de Cambios",
+                                            "message": "El audit trail se mostrará aquí muy pronto.",
+                                            "icon": "ri-history-line"
+                                        }
+                                    )
                                 ]
                             )
                         ]
@@ -256,7 +251,14 @@ def get_lead_detail_schema(user_id: str, lead_id: str, lead: dict) -> ClientUser
                             DashboardComponent(
                                 type="card",
                                 components=[
-                                    DashboardComponent(type="typography", text="<div class='p-5 text-center text-muted'><h4>Origen del Lead</h4><p>Información de la fuente se mostrará aquí.</p></div>", tag="div")
+                                    DashboardComponent(
+                                        type="empty-state",
+                                        properties={
+                                            "title": "Origen del Lead",
+                                            "message": "Información detallada de la fuente se mostrará aquí.",
+                                            "icon": "ri-links-line"
+                                        }
+                                    )
                                 ]
                             )
                         ]

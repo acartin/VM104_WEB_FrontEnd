@@ -1,4 +1,4 @@
-import { renderContent } from '../../renderer/main.js';
+import { renderContent } from '../../renderer/engine/registry.js';
 
 export function LinkTabs(data) {
     const tabsId = `tabs-${Math.random().toString(36).substr(2, 9)}`;
@@ -26,7 +26,7 @@ export function LinkTabs(data) {
         return `
             <div class="tab-pane ${isActive}" id="${tabsId}-${item.id}" role="tabpanel">
                 <div class="d-flex mb-4">
-                    <div class="flex-grow-1 border-start border-end border-bottom border-dashed border-light rounded-bottom p-3">
+                    <div class="flex-grow-1 p-3">
                          ${contentHtml}
                     </div>
                 </div>

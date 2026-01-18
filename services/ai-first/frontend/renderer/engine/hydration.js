@@ -9,7 +9,7 @@ import { CustomLeadsGrid } from './CustomLeadsGrid.js'; // Import new engine (Cl
 import { GridFilters } from './GridFilters.js'; // Import GridFilters module
 
 const API_BASE_URL = window.AppConfig.API_BASE_URL;
-window.gridInstances = {};
+
 
 async function fetchGridDataForGridJs(container, params = {}) {
     const url = container.dataset.url;
@@ -60,6 +60,7 @@ export async function hydrateGrids() {
 
 
         // Initialize Engine
+        if (!window.gridInstances) window.gridInstances = {};
         window.gridInstances[container.id] = new CustomLeadsGrid(container, config);
     });
 }
@@ -120,7 +121,7 @@ async function _hydrateStandardGrids(grids) {
                         }
                         if (act.action === 'navigate') {
                             const url = (act.url || act.action_url || '').replace('{id}', rowId);
-                            return `<li><a class="dropdown-item" href="${url}">
+                            return `<li><a class="dropdown-item" href="javascript:void(0)" onclick="window.navigateTo('${url}')">
                                 <i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}
                             </a></li>`;
                         }
@@ -284,8 +285,8 @@ export function hydrateLeadsControlGrid() {
                                 <i class="ri-more-2-fill fs-14"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="/leads/${rowId}"><i class="ri-eye-line align-middle me-2"></i>Ver Perfil</a></li>
-                                <li><a class="dropdown-item" href="/leads/${rowId}/chat"><i class="ri-message-3-line align-middle me-2"></i>Abrir Chat</a></li>
+                                <li><a class="dropdown-item" href="/dashboard/leads/${rowId}"><i class="ri-eye-line align-middle me-2"></i>Ver Perfil</a></li>
+                                <li><a class="dropdown-item" href="/dashboard/leads/${rowId}/chat"><i class="ri-message-3-line align-middle me-2"></i>Abrir Chat</a></li>
                             </ul>
                         </div>
                     `);

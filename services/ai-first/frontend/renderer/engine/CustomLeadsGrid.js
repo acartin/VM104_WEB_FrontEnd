@@ -15,6 +15,9 @@ export class CustomLeadsGrid {
         window.gridInstances = window.gridInstances || {};
         if (this.container.id) {
             window.gridInstances[this.container.id] = this;
+            console.log(`[CustomLeadsGrid] Registered instance: ${this.container.id}`, this);
+        } else {
+            console.warn("[CustomLeadsGrid] Container has no ID, cannot register instance!");
         }
 
         // Initialize Filters
@@ -29,7 +32,9 @@ export class CustomLeadsGrid {
     async init() {
         try {
             await this.fetchData();
+
             if (this.filters) this.filters.renderFilterBar();
+
             this.applySort();
             this.render();
         } catch (e) {
@@ -151,7 +156,7 @@ export class CustomLeadsGrid {
 
         // Render Body
         const tbody = this.filteredData.slice(start, end).map(row => `
-            <tr onclick="window.location.href='/dashboard/leads/${row.id}'" style="cursor: pointer;">
+            <tr onclick="window.navigateTo('/dashboard/leads/${row.id}')" style="cursor: pointer;">
                 ${this.config.columns.map(col => `<td>${this.renderCell(row, col)}</td>`).join('')}
                 <td onclick="event.stopPropagation()">${this.renderActions(row)}</td>
             </tr>
@@ -213,7 +218,7 @@ export class CustomLeadsGrid {
 
     renderActions(row) {
         return `
-            <button class="btn btn-sm btn-soft-secondary" onclick="window.location.href='/dashboard/leads/${row.id}'">
+            <button class="btn btn-sm btn-soft-secondary" onclick="window.navigateTo('/dashboard/leads/${row.id}')">
                 <i class="ri-eye-line"></i>
             </button>
         `;

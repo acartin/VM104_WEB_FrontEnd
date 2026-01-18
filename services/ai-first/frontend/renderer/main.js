@@ -18,6 +18,7 @@ const RENDERER_VERSION = "68";
 console.log(`[Renderer] v${RENDERER_VERSION} Modular Initializing... (REGISTRY FIX)`);
 
 window.appState = { currentPath: null };
+window.navigateTo = navigateTo; // Expose for inline clicks
 
 async function init() {
     const appRoot = document.getElementById('app-root');
@@ -86,6 +87,16 @@ async function init() {
 
 export async function navigateTo(href, pushState = true) {
     if (!href || href === '#' || href.startsWith('#')) return;
+
+    // PERSISTENCE LOGIC START
+    // If we are leaving a grid view (e.g. /leads/me) to go to a detail view, save the grid URL.
+    const isDetailView = /\/leads\/[0-9a-fA-F-]{36}/.test(href);
+    if (isDetailView && window.location.pathname !== href) {
+        localStorage.setItem('last_active_grid_url', window.location.pathname);
+    }
+    // PERSISTENCE LOGIC END
+    // PERSISTENCE LOGIC END
+
     window.appState.currentPath = href;
     const pageRoot = document.getElementById('page-root');
     if (!pageRoot) return;

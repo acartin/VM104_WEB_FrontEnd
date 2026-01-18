@@ -23,7 +23,7 @@ export const formatters = {
 
         return gridjs.html(`
             <div class="text-center" title="Score: ${score}">
-                <a href="/leads/${rowId}" class="thermal-pill ${colorClass}">${label}</a>
+                <a href="javascript:void(0)" onclick="window.navigateTo('/dashboard/leads/${rowId}')" class="thermal-pill ${colorClass}">${label}</a>
             </div>
         `);
     },
@@ -48,7 +48,7 @@ export const formatters = {
         const offset = c - (score / 100) * c;
 
         return gridjs.html(`
-            <a href="/leads/${rowId}" class="d-flex align-items-center text-decoration-none shadow-none">
+            <a href="javascript:void(0)" onclick="window.navigateTo('/dashboard/leads/${rowId}')" class="d-flex align-items-center text-decoration-none shadow-none">
                 <div class="me-2 position-relative" style="width: 32px; height: 32px; cursor: pointer;">
                     <svg width="32" height="32" viewBox="0 0 32 32">
                         <circle cx="16" cy="16" r="${r}" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity: 0.1"></circle>

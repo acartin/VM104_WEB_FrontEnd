@@ -3,7 +3,7 @@ from typing import List, Optional
 from uuid import UUID
 from app.modules.auth.config import current_active_user
 from app.modules.auth.models import User
-from app.modules.contacts.service import service as contact_service
+from app.modules.leads.service import service as lead_service
 from app.contracts.ui_schema import WebIAFirstResponse
 
 router = APIRouter()
@@ -14,7 +14,7 @@ async def get_all_leads_view(
     user: User = Depends(current_active_user)
 ):
     """Returns the General Management view for Leads (for Admins)."""
-    leads = await contact_service.get_my_leads(user.id)
+    leads = await lead_service.get_my_leads(user.id)
     rows = _transform_leads_to_rows(leads)
     
     return {
@@ -61,7 +61,7 @@ async def list_leads_data(
 ):
     """Returns raw data for all leads (Placeholder for Admin)."""
     # For now, return same as 'me' until manage logic is ready
-    leads = await contact_service.get_my_leads(user.id)
+    leads = await lead_service.get_my_leads(user.id)
     return _transform_leads_to_rows(leads)
 
 def _transform_leads_to_rows(leads):
@@ -135,7 +135,7 @@ async def list_my_leads_data(
     user: User = Depends(current_active_user)
 ):
     """Returns raw data for Client Side Grid."""
-    result = await contact_service.get_my_leads(user.id)
+    result = await lead_service.get_my_leads(user.id)
     
     # Transform items but keep structure
     items = _transform_leads_to_rows(result)
@@ -181,7 +181,7 @@ async def get_my_leads(
     user: User = Depends(current_active_user)
 ):
     """Returns the CRM Workview for the current user."""
-    result = await contact_service.get_my_leads(user.id)
+    result = await lead_service.get_my_leads(user.id)
     rows = _transform_leads_to_rows(result)
 
     return {
@@ -217,8 +217,7 @@ async def get_lead_detail(lead_id: UUID, user: User = Depends(current_active_use
     Returns the detailed view for a single lead.
     """
     # Fetch lead data
-    leads = await contact_service.get_my_leads(user.id)
-    lead = next((l for l in leads if l['id'] == lead_id), None)
+    lead = await lead_service.get_lead_by_id(lead_id)
     
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found or not assigned.")
@@ -290,8 +289,7 @@ async def get_lead_chat(lead_id: UUID, user: User = Depends(current_active_user)
     Returns the chat view for a single lead.
     """
     # Fetch lead data
-    leads = await contact_service.get_my_leads(user.id)
-    lead = next((l for l in leads if l['id'] == lead_id), None)
+    lead = await lead_service.get_lead_by_id(lead_id)
     
     if not lead:
         raise HTTPException(status_code=404, detail="Lead not found or not assigned.")

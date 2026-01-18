@@ -16,6 +16,11 @@ import { LinkProjectBanner } from '../../components/layout/ProjectBanner.js';
 import { LinkCard } from '../../components/ui/Card.js';
 import { LinkGauge } from '../../components/ui/Gauge.js';
 import { LinkMemberListCard, LinkGenericCard, LinkFileGrid, LinkContactListDetailed } from '../../components/cards/DashboardWidgets.js';
+import { LinkScoreRow } from '../../components/ui/ScoreRow.js';
+import { LinkInfoRow } from '../../components/ui/InfoRow.js';
+import { LinkProfileHeader } from '../../components/ui/ProfileHeader.js';
+import { LinkBackLink } from '../../components/ui/BackLink.js';
+import { LinkEmptyState } from '../../components/ui/EmptyState.js';
 
 // Simple Wrapper for Custom Grid Container
 export function LinkCustomGridContainer(component) {
@@ -61,7 +66,12 @@ const registry = {
     'generic-card': LinkGenericCard,
     'gauge': LinkGauge,
     'file-grid': LinkFileGrid,
-    'contact-list-detailed': LinkContactListDetailed
+    'contact-list-detailed': LinkContactListDetailed,
+    'score-row': LinkScoreRow,
+    'info-row': LinkInfoRow,
+    'profile-header': LinkProfileHeader,
+    'back-link': LinkBackLink,
+    'empty-state': LinkEmptyState
 };
 
 export function renderComponent(component) {

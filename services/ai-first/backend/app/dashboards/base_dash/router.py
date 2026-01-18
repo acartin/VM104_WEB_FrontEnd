@@ -24,7 +24,8 @@ async def app_init(user: User = Depends(current_active_user)):
     
     # Role-based landing logic
     if current_role == "client-admin" and user.tenants:
-        from app.dashboards.client_admin_dash.router import get_client_admin_dashboard
+        # Legacy import removed
+
         # We try to get the dashboard content. Since it's a route, we call the logic.
         # Note: This is a bit recursive in dependencies, better to import the builder.
         # For now, let's just use the bienvenida or a redirect hint.

@@ -28,10 +28,8 @@ export class CustomLeadsGrid {
 
         // Initialize GridFilters if enabled
         if (this.config.enableFilters) {
-            console.log('[CustomGrid] Initializing GridFilters', this.config.filterConfig);
             this.filters = new GridFilters(this);
         } else {
-            console.log('[CustomGrid] Filters disabled or not configured');
         }
 
         // Render Skeleton immediately

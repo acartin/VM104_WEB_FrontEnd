@@ -99,7 +99,9 @@ export async function navigateTo(href, pushState = true) {
         if (!response.ok) throw new Error(`View not found (${response.status})`);
 
         const viewData = await response.json();
-
+        if (viewData.debug_data) {
+            console.log("[Lead Detail Data]:", viewData.debug_data);
+        }
         if (viewData.layout === 'dashboard-project-overview') {
             const bannerHtml = LinkProjectBanner(viewData);
             let tabsContentHtml = '';
@@ -172,7 +174,8 @@ function updateHeaderProfile() {
             if (profile.is_superuser) tenantEl.textContent = 'Global Administrator';
             else if (profile.tenants?.length > 0) {
                 const tenant = profile.tenants[0];
-                tenantEl.textContent = tenant.client?.name ? `Client Admin - ${tenant.client.name}` : 'Client Admin';
+                const roleLabel = tenant.role?.name || 'User';
+                tenantEl.textContent = tenant.client?.name ? `${roleLabel} - ${tenant.client.name}` : roleLabel;
             }
         }
     } catch (e) {

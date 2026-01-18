@@ -1,5 +1,5 @@
 export function LinkSidebar(data) {
-    console.log("[Sidebar] Rendering with data:", data); // DEBUG
+
     const menuItemsHtml = (data.items || [])
         .map(item => MenuItem(item))
         .join('');

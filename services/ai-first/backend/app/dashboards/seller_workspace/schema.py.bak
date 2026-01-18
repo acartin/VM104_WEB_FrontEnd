@@ -1,0 +1,116 @@
+from typing import List, Optional
+from pydantic import BaseModel
+from app.contracts.ui_schema import UIComponent as DashboardComponent, WebIAFirstResponse
+
+
+class ClientUserDashboardSchema(BaseModel):
+    layout: str
+    components: List[DashboardComponent]
+
+
+def get_seller_workspace_schema(user_id: str) -> ClientUserDashboardSchema:
+    # 1. Configuración del Grid (Intacta)
+    grid_config = {
+        "grid_id": "leads-main-grid",
+        "data_url": "/leads/me/data",
+        "enableFilters": True,
+        "rowClickEnabled": True,
+        "rowClickUrl": "/leads/{id}",
+        "columns": [
+            {"id": "identity", "name": "Lead", "width": "250px", "sort": False},
+            {"id": "engagement", "name": "Interés", "width": "120px", "sort": True, "icon": "ri-fire-line", "type": "scoring-pillar"},
+            {"id": "finance", "name": "Finanzas", "width": "120px", "sort": True, "icon": "ri-money-dollar-circle-line", "type": "scoring-pillar"},
+            {"id": "timeline", "name": "Urgencia", "width": "120px", "sort": True, "icon": "ri-time-line", "type": "scoring-pillar"},
+            # {"id": "match", "name": "Match", "width": "100px", "sort": True, "icon": "ri-shake-hands-line", "type": "scoring-pillar"},
+            {"id": "info", "name": "Info", "width": "180px", "sort": False},
+            {"id": "outcome", "name": "Estado", "width": "150px", "sort": True}
+        ],
+        "actions": [
+            {"label": "Ver Detalles", "action": "navigate", "url_template": "/leads/{id}"}
+        ]
+    }
+
+    # 2. Construcción de Componentes (Tabs)
+    return ClientUserDashboardSchema(
+        layout="dashboard-standard",
+        components=[
+            DashboardComponent(
+                type="tabs",
+                # Tabs.js expects 'items' array at root, not 'components'
+                items=[
+                    {
+                        "id": "tab-overview", 
+                        "label": "Inicio", 
+                        "icon": "ri-home-4-line",
+                        "active": True,
+                        "content": [
+                            DashboardComponent(
+                                type="row",
+                                class_="row mb-4",
+                                components=[
+                                    # Metric: Leads Nuevos Hoy
+                                    DashboardComponent(
+                                        type="col", class_="col-md-4",
+                                        components=[
+                                            DashboardComponent(
+                                                type="card-metric",
+                                                properties={
+                                                    "title": "Nuevos Hoy", "value": "3", 
+                                                    "icon": "ri-user-add-line", "color": "success", "trend": "Igual que ayer"
+                                                }
+                                            )
+                                        ]
+                                    ),
+                                    # Metric: Tareas Pendientes
+                                    DashboardComponent(
+                                        type="col", class_="col-md-4",
+                                        components=[
+                                            DashboardComponent(
+                                                type="card-metric",
+                                                properties={
+                                                    "title": "Tareas Pendientes", "value": "5", 
+                                                    "icon": "ri-task-line", "color": "warning", "trend": "2 urgentes"
+                                                }
+                                            )
+                                        ]
+                                    ),
+                                     # Metric: Mi Conversión
+                                    DashboardComponent(
+                                        type="col", class_="col-md-4",
+                                        components=[
+                                            DashboardComponent(
+                                                type="card-metric",
+                                                properties={
+                                                    "title": "Mi Conversión", "value": "12%", 
+                                                    "icon": "ri-percent-line", "color": "primary", "trend": "Buen trabajo"
+                                                }
+                                            )
+                                        ]
+                                    ),
+                                ]
+                            ),
+                             DashboardComponent(
+                                type="card", properties={"title": "Actividad Reciente"},
+                                components=[
+                                     DashboardComponent(
+                                        type="typography", text="Aquí irá el timeline de tus interacciones...", tag="p", class_="text-muted"
+                                    )
+                                ]
+                            )
+                        ]
+                    },
+                    {
+                        "id": "tab-leads", 
+                        "label": "Mis Leads", 
+                        "icon": "ri-user-star-line",
+                        "content": [
+                            DashboardComponent(
+                                type="custom-leads-grid",
+                                properties=grid_config
+                            )
+                        ]
+                    }
+                ]
+            )
+        ]
+    )

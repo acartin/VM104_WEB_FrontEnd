@@ -5,7 +5,7 @@
 
 import { safeAtob, safeBtoa } from '../../utils/base64.js';
 import { formatters } from './formatters.js';
-import { CustomLeadsGrid } from './CustomGrid.js'; // Import new engine
+import { CustomLeadsGrid } from './CustomLeadsGrid.js'; // Import new engine (Clean V2)
 import { GridFilters } from './GridFilters.js'; // Import GridFilters module
 
 const API_BASE_URL = window.AppConfig.API_BASE_URL;
@@ -46,6 +46,7 @@ export async function hydrateGrids() {
         container.dataset.initialized = "true";
 
         console.log("Hydrating Custom Grid Beta:", container.id);
+
         const config = {
             grid_id: container.dataset.gridId || 'default',
             data_url: container.dataset.url,
@@ -56,6 +57,7 @@ export async function hydrateGrids() {
         };
 
         console.log('[Hydration] Grid config:', config);
+
 
         // Initialize Engine
         window.gridInstances[container.id] = new CustomLeadsGrid(container, config);
@@ -349,7 +351,6 @@ export function hydrateLeadsControlGrid() {
             const state = grid.config.store.getState();
             if (state.pagination && state.pagination.page !== 0) {
                 // Explicitly update config and FORCE render to ensure pipeline re-runs
-                console.log('[Grid] Sorting detected on inner page, resetting to Page 1');
                 setTimeout(() => {
                     grid.updateConfig({
                         pagination: { page: 0, limit: 10 }
@@ -422,3 +423,5 @@ function showFeedback(id) {
         setTimeout(() => btn.innerText = original, 2000);
     }
 }
+
+

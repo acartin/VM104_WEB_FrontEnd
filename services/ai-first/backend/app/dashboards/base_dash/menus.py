@@ -5,8 +5,12 @@ MENU_DASHBOARD = {"id": "dash", "label": "Dashboard", "icon": "ri-dashboard-2-li
 MENU_CLIENTS   = {"id": "clients", "label": "Admin Clientes", "icon": "ri-building-line", "link": "/clients"}
 MENU_PROMPTS   = {"id": "prompts", "label": "AI Prompts", "icon": "ri-robot-line", "link": "/prompts"}
 MENU_COUNTRIES   = {"id": "items", "label": "Paises", "icon": "ri-map-pin-line", "link": "/countries"}
-MENU_ADMIN_CLIENTS = {"id": "admin-clients", "label": "Admin", "icon": "ri-admin-line", "link": "/dashboard/client-admin"}
-MENU_USER_DASH = {"id": "user-dash", "label": "Mi Dashboard", "icon": "ri-dashboard-2-line", "link": "/dashboard/client-user"}
+
+# NUEVO: Mission Control (Unifica Admin + Dashboard Personal)
+MENU_MISSION_CONTROL = {"id": "mission-control", "label": "Home", "icon": "ri-home-4-line", "link": "/dashboard/manager"}
+
+# Dashboard solo para vendedores (Seller Workspace)
+MENU_SELLER_WORKSPACE = {"id": "seller-workspace", "label": "Mi Dashboard", "icon": "ri-dashboard-line", "link": "/dashboard/seller"}
 
 # Submenú Sistema
 MENU_SYSTEM = {
@@ -42,19 +46,19 @@ ROLE_MENUS = {
         MENU_SYSTEM
     ],
     
-    # 3. Client Admin (Coca Cola Admin)
-    # Ve su negocio y gestión básica
+    # 3. Client Admin (Coca Cola Boss)
+    # Ve "Mission Control" (Visión panorámica + personal) y su gestión
     "client-admin": [
-        MENU_ADMIN_CLIENTS, # Visión gerencial (Dashboard de Equipo/Negocio)
-        MENU_USER_DASH,      # Visión operativa personal
-        {"id": "leads-me", "label": "Mis Leads", "icon": "ri-user-star-line", "link": "/leads/me"},
+        MENU_MISSION_CONTROL, # <--- CAMBIO: Unificado
+        # MENU_SELLER_WORKSPACE eliminado para no duplicar. Su data vive en Mission Control.
+        {"id": "leads-me", "label": "Mis Leads", "icon": "ri-user-star-line", "link": "/leads/me"}, # INTOCABLE
         {"id": "campaigns", "label": "Campañas", "icon": "ri-megaphone-line", "link": "/campaigns"}
     ],
     
-    # 4. Client User (Coca Cola User)
+    # 4. Client User (Coca Cola Vendedor)
     # Operativo puro
     "client-user": [
-        MENU_USER_DASH,
+        MENU_SELLER_WORKSPACE,
         {"id": "leads-me", "label": "Mis Leads", "icon": "ri-user-star-line", "link": "/leads/me"},
         {"id": "tasks", "label": "Mis Tareas", "icon": "ri-task-line", "link": "/tasks"}
     ]

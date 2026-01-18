@@ -4,7 +4,7 @@
 
 ANTES DE EMPEZAR, DEBES LEER Y COMPRENDER:
 1. .cursorrules (Tus reglas de comportamiento y prohibiciones).
-2. todos los archivos en /ai_context (especialmente status.md para ver hitos).
+2. todos los archivos en /ai_context .
 3. todos los archivos en /docs.
 
 REGLAS DE ORO PARA TUS RESPUESTAS:

@@ -6,20 +6,29 @@ export function LinkRow(data) {
         .join('');
 
     return `
-        <div class="row ${data.class || ''}">
+        <div class="row ${data.class_ || data.class || ''}">
             ${childrenHtml}
         </div>
     `;
 }
 
 export function LinkCol(data) {
-    const size = data.size || 12;
     const childrenHtml = (data.components || [])
         .map(c => renderComponent(c))
         .join('');
 
+    // If class_ is provided, use it directly (for col-auto, etc)
+    // Otherwise, use size with col-xl-{size} col-lg-{size}
+    let colClass = '';
+    if (data.class_) {
+        colClass = data.class_;
+    } else {
+        const size = data.size || 12;
+        colClass = `col-xl-${size} col-lg-${size}`;
+    }
+
     return `
-        <div class="col-xl-${size} col-lg-${size} ${data.class || ''}">
+        <div class="${colClass}">
             ${childrenHtml}
         </div>
     `;

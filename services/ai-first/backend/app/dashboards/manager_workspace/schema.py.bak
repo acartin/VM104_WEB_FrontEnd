@@ -1,0 +1,138 @@
+from typing import List
+from pydantic import BaseModel
+from app.contracts.ui_schema import UIComponent as DashboardComponent
+
+class ManagerDashboardSchema(BaseModel):
+    layout: str
+    components: List[DashboardComponent]
+
+
+def get_manager_workspace_schema(user_id: str) -> ManagerDashboardSchema:
+    # 1. Configuración del Grid Personal (Misma que Seller)
+    grid_config = {
+        "grid_id": "leads-manager-grid", # ID único para evitar conflictos
+        "data_url": "/leads/me/data",
+        "enableFilters": True,
+        "rowClickEnabled": True,
+        "rowClickUrl": "/leads/{id}",
+        "columns": [
+            {"id": "identity", "name": "Lead", "width": "250px", "sort": False},
+            {"id": "engagement", "name": "Interés", "width": "120px", "sort": True, "icon": "ri-fire-line", "type": "scoring-pillar"},
+            {"id": "finance", "name": "Finanzas", "width": "120px", "sort": True, "icon": "ri-money-dollar-circle-line", "type": "scoring-pillar"},
+            {"id": "timeline", "name": "Urgencia", "width": "120px", "sort": True, "icon": "ri-time-line", "type": "scoring-pillar"},
+            {"id": "info", "name": "Info", "width": "180px", "sort": False},
+            {"id": "outcome", "name": "Estado", "width": "150px", "sort": True}
+        ],
+        "actions": [
+            {"label": "Ver Detalles", "action": "navigate", "url_template": "/leads/{id}"}
+        ]
+    }
+
+    return ManagerDashboardSchema(
+        layout="dashboard-standard",
+        components=[
+            DashboardComponent(
+                type="tabs",
+                # Tabs.js expects 'items' array at root
+                items=[
+                    {
+                        "id": "tab-resumen", 
+                        "label": "Resumen", 
+                        "icon": "ri-dashboard-line",
+                        "active": True,
+                        "content": [
+                            DashboardComponent(
+                                type="row",
+                                class_="row",
+                                components=[
+                                    DashboardComponent(
+                                        type="col",
+                                        class_="col-md-3",
+                                        components=[
+                                             DashboardComponent(
+                                                type="card-metric",
+                                                properties={
+                                                    "title": "Leads Nuevos",
+                                                    "value": "124",
+                                                    "icon": "ri-user-add-line",
+                                                    "trend": "+12%",
+                                                    "color": "success"
+                                                }
+                                            )
+                                        ]
+                                    ),
+                                    DashboardComponent(
+                                        type="col",
+                                        class_="col-md-3",
+                                        components=[
+                                             DashboardComponent(
+                                                type="card-metric",
+                                                properties={
+                                                    "title": "Conversión",
+                                                    "value": "8.5%",
+                                                    "icon": "ri-pie-chart-line",
+                                                    "trend": "+2.1%",
+                                                    "color": "primary"
+                                                }
+                                            )
+                                        ]
+                                    ),
+                                     DashboardComponent(
+                                        type="col",
+                                        class_="col-md-3",
+                                        components=[
+                                             DashboardComponent(
+                                                type="card-metric",
+                                                properties={
+                                                    "title": "Interacciones AI",
+                                                    "value": "1.2k",
+                                                    "icon": "ri-robot-line",
+                                                    "trend": "+15%",
+                                                    "color": "info"
+                                                }
+                                            )
+                                        ]
+                                    ),
+                                ]
+                            ),
+                             DashboardComponent(
+                                type="row",
+                                class_="row mt-4",
+                                components=[
+                                     DashboardComponent(
+                                        type="col",
+                                        class_="col-12",
+                                        components=[
+                                            DashboardComponent(
+                                                type="card", 
+                                                properties={"title": "Rendimiento de Equipo (Placeholder)"},
+                                                components=[
+                                                    DashboardComponent(
+                                                        type="typography",
+                                                        text="Gráfica de rendimiento próximamente...",
+                                                        tag="p",
+                                                        class_="text-muted"
+                                                    )
+                                                ]
+                                            )
+                                        ]
+                                     )
+                                ]
+                            )
+                        ]
+                    },
+                    {
+                        "id": "tab-leads", 
+                        "label": "Leads", 
+                        "icon": "ri-user-star-line",
+                        "content": [
+                            DashboardComponent(
+                                type="custom-leads-grid",
+                                properties=grid_config
+                            )
+                        ]
+                    }
+                ]
+            )
+        ]
+    )

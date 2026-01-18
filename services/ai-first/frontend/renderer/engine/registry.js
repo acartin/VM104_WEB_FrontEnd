@@ -14,6 +14,7 @@ import { LinkModalForm } from '../../components/forms/ModalForm.js';
 import { LinkRow, LinkCol } from '../../components/layout/Layout.js';
 import { LinkProjectBanner } from '../../components/layout/ProjectBanner.js';
 import { LinkCard } from '../../components/ui/Card.js';
+import { LinkGauge } from '../../components/ui/Gauge.js';
 import { LinkMemberListCard, LinkGenericCard, LinkFileGrid, LinkContactListDetailed } from '../../components/cards/DashboardWidgets.js';
 
 // Simple Wrapper for Custom Grid Container
@@ -58,6 +59,7 @@ const registry = {
     'member-list': LinkMemberListCard,
     'member-list-card': LinkMemberListCard,
     'generic-card': LinkGenericCard,
+    'gauge': LinkGauge,
     'file-grid': LinkFileGrid,
     'contact-list-detailed': LinkContactListDetailed
 };

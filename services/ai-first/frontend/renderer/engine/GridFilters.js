@@ -62,7 +62,6 @@ class GridFilters {
      * Render the filter bar UI
      */
     renderFilterBar() {
-        console.log('[GridFilters] renderFilterBar called', this.grid.container.id);
         const html = `
             <div class="filter-bar mb-3">
                 <div class="row g-2 align-items-center">
@@ -457,16 +456,33 @@ class GridFilters {
     applyFilters() {
         let filtered = [...this.grid.data];
 
-        // Apply search filter
+        // Apply search filter (Exact Phrase Match with Normalization)
         if (this.activeFilters.search) {
-            const term = this.activeFilters.search.toLowerCase();
+            // Helper: Remove punctuation/accents and keep only alphanumeric + spaces
+            const normalize = (str) => {
+                return str.toLowerCase()
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
+                    .replace(/[^\w\s]/gi, ' ') // Replace punctuation with space
+                    .replace(/\s+/g, ' ') // Collapse multiple spaces
+                    .trim();
+            };
+
+            const rawTerm = normalize(this.activeFilters.search);
+            // const searchTokens = rawTerm.split(' ').filter(t => t.length > 0); // REMOVED TOKEN SPLITTING
+
             const searchFields = this.config.searchFields || ['full_name', 'email'];
 
             filtered = filtered.filter(row => {
-                return searchFields.some(field => {
-                    const value = row[field];
-                    return value && value.toString().toLowerCase().includes(term);
-                });
+                // Combine and normalize row data
+                const rowSearchString = normalize(
+                    searchFields.map(field => {
+                        const val = row[field];
+                        return val ? val.toString() : '';
+                    }).join(' ')
+                );
+
+                // Check if the EXACT normalized phrase exists in the row
+                return rowSearchString.includes(rawTerm);
             });
         }
 
@@ -491,7 +507,6 @@ class GridFilters {
         const preset = this.presets.find(p => p.id === presetId);
         if (!preset) return;
 
-        console.log('[GridFilters] Applying preset:', preset.name, preset.config);
 
         // Reset current filters first
         this.activeFilters = {
@@ -518,7 +533,6 @@ class GridFilters {
 
         // Show success notification
         this.showToast('success', 'Vista Aplicada', `Se ha cargado la vista: ${preset.name}`);
-        console.log(`Vista "${preset.name}" aplicada.`);
     }
 
     /**
@@ -692,7 +706,6 @@ class GridFilters {
             });
 
             if (response.ok) {
-                console.log('[GridFilters] Preset saved successfully');
                 this.showToast('success', 'Vista Guardada', `La vista "${name}" ha sido guardada correctamente.`);
                 await this.loadPresets(); // Reload list
             } else {

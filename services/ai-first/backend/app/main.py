@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-# Restart Trigger
+# Restart Trigger Fixed
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
@@ -7,7 +7,8 @@ from app.config.settings import settings
 
 # Import Feature Modules
 from app.dashboards.base_dash.router import router as base_dash_router
-from app.dashboards.client_admin_dash.router import router as client_admin_router
+from app.dashboards.manager_workspace.router import router as manager_workspace_router
+from app.dashboards.seller_workspace.router import router as seller_workspace_router
 from app.modules.clients.router import router as clients_router
 from app.modules.countries.router import router as countries_router
 from app.modules.prompts.router import router as prompts_router
@@ -18,7 +19,6 @@ from app.modules.contacts.router import router as contacts_router
 from app.modules.leads.router import router as leads_router
 from app.modules.campaigns.router import router as campaigns_router
 from app.modules.grid_presets.router import router as grid_presets_router
-from app.dashboards.client_user_dash.router import router as client_user_router
 
 app = FastAPI(title="Web IAFirst Operational API")
 
@@ -59,8 +59,8 @@ async def health_check():
 
 # Include Feature Routers
 app.include_router(base_dash_router, tags=["Dashboard (Base)"]) # Root prefix for app-init
-app.include_router(client_admin_router, prefix="/dashboard", tags=["Dashboard (Client Admin)"])
-app.include_router(client_user_router, prefix="/dashboard", tags=["Dashboard (Client User)"])
+app.include_router(manager_workspace_router, prefix="/dashboard")
+app.include_router(seller_workspace_router, prefix="/dashboard")
 app.include_router(leads_router, prefix="/leads", tags=["Leads Operations"])
 app.include_router(campaigns_router, prefix="/campaigns", tags=["Campaigns Operations"])
 app.include_router(clients_router, tags=["Clients"])

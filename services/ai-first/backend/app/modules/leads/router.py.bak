@@ -44,7 +44,7 @@ async def get_all_leads_view(
                                 {"key": "created", "label": "Fecha"}
                             ],
                             "actions": [
-                                {"label": "Ver Detalle", "icon": "ri-eye-line", "action": "navigate", "url": "/dashboard/leads/{id}"}
+                                {"label": "Ver Detalle", "icon": "ri-eye-line", "action": "navigate", "url": "/leads/{id}"}
                             ]
                         },
                         "rows": rows
@@ -125,7 +125,6 @@ def _transform_leads_to_rows(leads):
             },
             "email": l['email'] or "-",
             "phone": l['phone'] or "-",
-            "full_name": l['full_name'] or "", # Added for search compatibility
             "created": l['created_at'].strftime("%Y-%m-%d") if l['created_at'] else "-"
         })
     return rows
@@ -142,40 +141,6 @@ async def list_my_leads_data(
     
     return items
 
-
-# --- SHARED CONFIGURATION (FUENTE DE VERDAD) ---
-LEADS_GRID_CONFIG_FULL = {
-    "grid_id": "leads-me",
-    "data_url": "/leads/me/data",
-    "enableFilters": True,
-    "filterConfig": {
-        "searchFields": ["full_name", "email"],
-        "filterableColumns": [
-            {"id": "engagement", "label": "Interés", "icon": "ri-message-3-line"},
-            {"id": "finance", "label": "Finanzas", "icon": "ri-bank-line"},
-            {"id": "timeline", "label": "Urgencia", "icon": "ri-time-line"},
-            {"id": "match", "label": "Match", "icon": "ri-home-4-line"},
-            {"id": "info", "label": "Info", "icon": "ri-file-list-3-line"},
-            {"id": "contact_preference", "label": "Intención", "icon": "ri-flag-line"},
-            {"id": "status", "label": "Estado", "icon": "ri-git-branch-line"}
-        ]
-    },
-    "columns": [
-        {"id": "identity", "label": "Lead / Calificación", "type": "gauge-identity", "sortable": True, "width": "250px", "icon": "ri-shield-user-line"},
-        {"id": "engagement", "label": "Interés", "type": "scoring-pillar", "sortable": True, "icon": "ri-message-3-line"},
-        {"id": "finance", "label": "Finanzas", "type": "scoring-pillar", "sortable": True, "icon": "ri-bank-line"},
-        {"id": "timeline", "label": "Urgencia", "type": "scoring-pillar", "sortable": True, "icon": "ri-time-line"},
-        {"id": "match", "label": "Match", "type": "scoring-pillar", "sortable": True, "icon": "ri-home-4-line"},
-        {"id": "info", "label": "Info", "type": "scoring-pillar", "sortable": True, "icon": "ri-file-list-3-line"},
-        {"id": "contact_preference", "label": "Intención", "type": "scoring-pillar", "sortable": True, "icon": "ri-flag-line"},
-        {"id": "status", "label": "Estado", "type": "scoring-pillar", "sortable": True, "icon": "ri-git-branch-line"}
-    ],
-    "actions": [
-        {"label": "Ver Perfil", "icon": "ri-eye-line", "action": "navigate", "url": "/dashboard/leads/{id}"},
-        {"label": "Chat", "icon": "ri-chat-3-line", "action": "navigate", "url": "/dashboard/leads/{id}/chat"}
-    ]
-}
-
 @router.get("/me", response_model=WebIAFirstResponse)
 async def get_my_leads(
     user: User = Depends(current_active_user)
@@ -183,6 +148,8 @@ async def get_my_leads(
     """Returns the CRM Workview for the current user."""
     result = await contact_service.get_my_leads(user.id)
     rows = _transform_leads_to_rows(result)
+
+
 
     return {
         "layout": "dashboard-standard",
@@ -200,7 +167,37 @@ async def get_my_leads(
                     {
                         "type": "custom-leads-grid",
                         "label": "Panel de Leads",
-                        "properties": LEADS_GRID_CONFIG_FULL # <--- USAMOS LA CONSTANTE
+                        "properties": {
+                            "grid_id": "leads-me",
+                            "data_url": "/leads/me/data",
+                            "enableFilters": True,
+                            "filterConfig": {
+                                "searchFields": ["full_name", "email"],
+                                "filterableColumns": [
+                                    {"id": "engagement", "label": "Interés", "icon": "ri-message-3-line"},
+                                    {"id": "finance", "label": "Finanzas", "icon": "ri-bank-line"},
+                                    {"id": "timeline", "label": "Urgencia", "icon": "ri-time-line"},
+                                    {"id": "match", "label": "Match", "icon": "ri-home-4-line"},
+                                    {"id": "info", "label": "Info", "icon": "ri-file-list-3-line"},
+                                    {"id": "contact_preference", "label": "Intención", "icon": "ri-flag-line"},
+                                    {"id": "status", "label": "Estado", "icon": "ri-git-branch-line"}
+                                ]
+                            },
+                            "columns": [
+                                {"id": "identity", "label": "Lead / Calificación", "type": "gauge-identity", "sortable": True, "width": "250px", "icon": "ri-shield-user-line"},
+                                {"id": "engagement", "label": "Interés", "type": "scoring-pillar", "sortable": True, "icon": "ri-message-3-line"},
+                                {"id": "finance", "label": "Finanzas", "type": "scoring-pillar", "sortable": True, "icon": "ri-bank-line"},
+                                {"id": "timeline", "label": "Urgencia", "type": "scoring-pillar", "sortable": True, "icon": "ri-time-line"},
+                                {"id": "match", "label": "Match", "type": "scoring-pillar", "sortable": True, "icon": "ri-home-4-line"},
+                                {"id": "info", "label": "Info", "type": "scoring-pillar", "sortable": True, "icon": "ri-file-list-3-line"},
+                                {"id": "contact_preference", "label": "Intención", "type": "scoring-pillar", "sortable": True, "icon": "ri-flag-line"},
+                                {"id": "status", "label": "Estado", "type": "scoring-pillar", "sortable": True, "icon": "ri-git-branch-line"}
+                            ],
+                            "actions": [
+                                {"label": "Ver Perfil", "icon": "ri-eye-line", "action": "navigate", "url": "/leads/{id}"},
+                                {"label": "Chat", "icon": "ri-chat-3-line", "action": "navigate", "url": "/leads/{id}/chat"}
+                            ]
+                        },
                     }
                 ]
             }

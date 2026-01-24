@@ -26,10 +26,10 @@ async def get_countries_view():
                     "data_url": "/countries/data", # Frontend fetches data from here
                     "primary_key": "id",
                     "columns": [
-                        {"key": "id", "label": "ID", "type": "text", "sortable": True},
-                        {"key": "name", "label": "Country Name", "type": "text", "sortable": True},
-                        {"key": "iso_code", "label": "ISO Code", "type": "badge", "color": "info"},
-                        {"key": "updated_at", "label": "Last Update", "type": "datetime"}
+                        {"id": "id", "label": "ID", "type": "text", "sortable": True},
+                        {"id": "name", "label": "Country Name", "type": "text", "sortable": True},
+                        {"id": "iso_code", "label": "ISO Code", "type": "badge", "color": "info"},
+                        {"id": "updated_at", "label": "Last Update", "type": "datetime"}
                     ],
                     "form_schema": [
                         {"name": "name", "label": "Country Name", "type": "text", "required": True, "min_length": 3},

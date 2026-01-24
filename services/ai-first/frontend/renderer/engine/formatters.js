@@ -21,11 +21,11 @@ export const formatters = {
         const colorClass = (typeof cell === 'object') ? (cell.color || 'thermal-none') : 'thermal-none';
         const rowId = getRowId(row, gridColumns);
 
-        return gridjs.html(`
+        return `
             <div class="text-center" title="Score: ${score}">
                 <a href="javascript:void(0)" onclick="window.navigateTo('/dashboard/leads/${rowId}')" class="thermal-pill ${colorClass}">${label}</a>
             </div>
-        `);
+        `;
     },
 
     /**
@@ -47,7 +47,7 @@ export const formatters = {
         const c = 2 * Math.PI * r;
         const offset = c - (score / 100) * c;
 
-        return gridjs.html(`
+        return `
             <a href="javascript:void(0)" onclick="window.navigateTo('/dashboard/leads/${rowId}')" class="d-flex align-items-center text-decoration-none shadow-none">
                 <div class="me-2 position-relative" style="width: 32px; height: 32px; cursor: pointer;">
                     <svg width="32" height="32" viewBox="0 0 32 32">
@@ -60,7 +60,7 @@ export const formatters = {
                 </div>
                 <div><h6 class="mb-0 fs-13 fw-medium text-body text-truncate" style="max-width: 180px;">${name}</h6></div>
             </a>
-        `);
+        `;
     },
 
     /**
@@ -72,7 +72,7 @@ export const formatters = {
         const color = (typeof cell === 'object' && cell.color) ? cell.color : (col.color || 'primary');
         const mapKey = String(label);
         const badgeColor = (col.badge_map && col.badge_map[mapKey]) ? col.badge_map[mapKey] : color;
-        return gridjs.html(`<span class="badge bg-${badgeColor}-subtle text-${badgeColor} border border-${badgeColor}-subtle px-2 py-1">${label}</span>`);
+        return `<span class="badge bg-${badgeColor}-subtle text-${badgeColor} border border-${badgeColor}-subtle px-2 py-1">${label}</span>`;
     },
 
     /**

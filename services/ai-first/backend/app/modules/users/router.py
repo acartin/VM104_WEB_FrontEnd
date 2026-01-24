@@ -60,12 +60,19 @@ async def get_ui_schema(user: User = Depends(RoleChecker(["admin"]))):
                     "id": "users_grid",
                     "data_url": "/system/users/data",
                     "columns": [
-                        {"key": "email", "label": "Email", "sortable": True},
-                        {"key": "name", "label": "Nombre"},
-                        {"key": "role_name", "label": "Rol", "type": "badge", "badge_map": {"admin": "danger", "client-admin": "warning", "client-user": "primary"}},
-                        {"key": "client_name", "label": "Cliente"},
-                        {"key": "is_active", "label": "Estado", "type": "badge", "badge_map": {"true": "success", "false": "secondary"}}
+                        {"id": "email", "label": "Email", "sortable": True},
+                        {"id": "name", "label": "Nombre"},
+                        {"id": "role_slug", "label": "Rol", "type": "badge", "badge_map": {"admin": "danger", "client-admin": "warning", "client-user": "info"}},
+                        {"id": "client_name", "label": "Cliente"},
+                        {"id": "is_active", "label": "Activo", "type": "badge", "badge_map": {"true": "success", "false": "secondary"}}
                     ],
+                    "enableFilters": True,
+                    "filterConfig": {
+                        "filterableColumns": [
+                            {"id": "role_slug", "label": "Rol", "icon": "ri-shield-user-line"},
+                            {"id": "client_name", "label": "Cliente", "icon": "ri-building-line"}
+                        ]
+                    },
                     "actions": [
                         {
                             "label": "Editar",

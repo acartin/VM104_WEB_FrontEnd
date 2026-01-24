@@ -35,8 +35,8 @@ async def get_roles_view(user: User = Depends(current_active_user)):
                     "id": "roles_grid",
                     "data_url": "/system/roles/data",
                     "columns": [
-                        {"key": "name", "label": "Nombre del Rol", "sortable": True},
-                        {"key": "slug", "label": "Identificador (Slug)", "sortable": True}
+                        {"id": "name", "label": "Nombre del Rol", "sortable": True},
+                        {"id": "slug", "label": "Identificador (Slug)", "sortable": True}
                     ],
                     "actions": [
                         {

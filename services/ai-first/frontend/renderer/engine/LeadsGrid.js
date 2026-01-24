@@ -1,50 +1,14 @@
 
-import { GridFilters } from './GridFilters.js';
+import { GridBase } from './GridBase.js';
 
-export class CustomLeadsGrid {
+export class LeadsGrid extends GridBase {
     constructor(container, config) {
-        this.container = container;
-        this.config = config;
-        this.data = [];
-        this.filteredData = [];
-        this.currentPage = 1;
-        this.pageSize = 10;
-        this.sortState = { colId: null, direction: 'asc' };
-
-        // Global Instance Registry for click handlers (sorting/pagination)
-        window.gridInstances = window.gridInstances || {};
-        if (this.container.id) {
-            window.gridInstances[this.container.id] = this;
-            console.log(`[CustomLeadsGrid] Registered instance: ${this.container.id}`, this);
-        } else {
-            console.warn("[CustomLeadsGrid] Container has no ID, cannot register instance!");
-        }
-
-        // Initialize Filters
-        if (this.config.enableFilters) {
-            this.filters = new GridFilters(this);
-        }
-
-        this.renderSkeleton();
-        this.init();
-    }
-
-    async init() {
-        try {
-            await this.fetchData();
-
-            if (this.filters) this.filters.renderFilterBar();
-
-            this.applySort();
-            this.render();
-        } catch (e) {
-            console.error("CustomLeadsGrid Init Error:", e);
-            this.container.innerHTML = `<div class="p-3 text-danger">Error initializing grid: ${e.message}</div>`;
-        }
+        super(container, config);
+        this.init(); // Start the lifecycle defined in GridBase
     }
 
     renderSkeleton() {
-        // Initial Loading State
+        // Initial Loading State & Structure
         this.container.innerHTML = `
             <div class="custom-grid-wrapper">
                 <div class="custom-grid-header mb-2 d-flex justify-content-between">
@@ -79,51 +43,7 @@ export class CustomLeadsGrid {
         `;
     }
 
-    async fetchData() {
-        const loader = document.getElementById(`${this.container.id}-loader`);
-        if (loader) loader.style.display = 'block';
-
-        const token = localStorage.getItem('access_token');
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-
-        try {
-            // Append version to avoid cache
-            const url = `${window.AppConfig.API_BASE_URL}${this.config.data_url}`;
-            const res = await fetch(url, { headers });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            this.data = await res.json();
-            this.filteredData = [...this.data];
-        } finally {
-            if (loader) loader.style.display = 'none';
-        }
-    }
-
-    applySort(colId = null) {
-        if (colId) {
-            if (this.sortState.colId === colId) {
-                this.sortState.direction = this.sortState.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                this.sortState.colId = colId;
-                this.sortState.direction = 'desc';
-            }
-        }
-
-        if (!this.sortState.colId) return;
-
-        const colDef = this.config.columns.find(c => c.id === this.sortState.colId);
-        const dir = this.sortState.direction === 'asc' ? 1 : -1;
-
-        this.filteredData.sort((a, b) => {
-            const valA = this.getSortValue(a, colDef);
-            const valB = this.getSortValue(b, colDef);
-            if (valA < valB) return -1 * dir;
-            if (valA > valB) return 1 * dir;
-            return 0;
-        });
-
-        this.currentPage = 1;
-    }
-
+    // Override: Define how to retrieve values for sorting specific columns
     getSortValue(row, col) {
         if (col.type === 'scoring-pillar') {
             const item = row[col.id];
@@ -136,13 +56,11 @@ export class CustomLeadsGrid {
         if (col.id === 'identity') {
             return Number(row.score_total || row.identity?.score || 0);
         }
-        const val = row[col.id];
-        return (typeof val === 'string') ? val.toLowerCase() : (val || 0);
+        return super.getSortValue(row, col);
     }
 
     render() {
-        const start = (this.currentPage - 1) * this.pageSize;
-        const end = start + this.pageSize;
+        const rows = this.getPaginatedRows(); // Provided by GridBase
         const pageIcons = { asc: '↑', desc: '↓' };
 
         // Render Header
@@ -155,7 +73,7 @@ export class CustomLeadsGrid {
         }).join('') + '<th></th>';
 
         // Render Body
-        const tbody = this.filteredData.slice(start, end).map(row => `
+        const tbody = rows.map(row => `
             <tr onclick="window.navigateTo('/dashboard/leads/${row.id}')" style="cursor: pointer;">
                 ${this.config.columns.map(col => `<td>${this.renderCell(row, col)}</td>`).join('')}
                 <td onclick="event.stopPropagation()">${this.renderActions(row)}</td>
@@ -163,8 +81,10 @@ export class CustomLeadsGrid {
         `).join('');
 
         const table = this.container.querySelector('table');
-        table.querySelector('thead tr').innerHTML = thead;
-        table.querySelector('tbody').innerHTML = tbody || '<tr><td colspan="100" class="text-center text-muted">No data found</td></tr>';
+        if (table) {
+            table.querySelector('thead tr').innerHTML = thead;
+            table.querySelector('tbody').innerHTML = tbody || '<tr><td colspan="100" class="text-center text-muted">No data found</td></tr>';
+        }
 
         this.renderPager();
     }
@@ -176,7 +96,6 @@ export class CustomLeadsGrid {
             const score = identity.score || row.score_total || 0;
             const name = identity.name || row.full_name || 'Unknown';
             const email = row.email || '-';
-            // Legacy Style: Dark background circle
             const colorClass = identity.color || (score > 80 ? 'success' : score > 50 ? 'warning' : 'danger');
 
             return `
@@ -225,12 +144,13 @@ export class CustomLeadsGrid {
     }
 
     renderPager() {
-        const total = this.filteredData.length;
+        const total = this.filteredData.length; // From Base
         const totalPages = Math.ceil(total / this.pageSize);
         const start = (this.currentPage - 1) * this.pageSize + 1;
         const end = Math.min(start + this.pageSize - 1, total);
 
-        this.container.querySelector(`#${this.container.id}-info`).innerText = `Showing ${start}-${end} of ${total}`;
+        const infoEl = this.container.querySelector(`#${this.container.id}-info`);
+        if (infoEl) infoEl.innerText = `Showing ${start}-${end} of ${total}`;
 
         // Simple Pager
         let html = '';
@@ -238,10 +158,7 @@ export class CustomLeadsGrid {
             html += `<li class="page-item ${this.currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="window.gridInstances['${this.container.id}'].setPage(${this.currentPage - 1}); return false;">Prev</a></li>`;
             html += `<li class="page-item ${this.currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="window.gridInstances['${this.container.id}'].setPage(${this.currentPage + 1}); return false;">Next</a></li>`;
         }
-        this.container.querySelector(`#${this.container.id}-pager`).innerHTML = html;
+        const pagerEl = this.container.querySelector(`#${this.container.id}-pager`);
+        if (pagerEl) pagerEl.innerHTML = html;
     }
-
-    // Handlers
-    handleSort(colId) { this.applySort(colId); this.render(); }
-    setPage(p) { this.currentPage = p; this.render(); }
 }

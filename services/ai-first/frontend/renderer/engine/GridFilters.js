@@ -66,12 +66,12 @@ class GridFilters {
             <div class="filter-bar mb-3">
                 <div class="row g-2 align-items-center">
                     <div class="col-md-5">
-                        <div class="search-box">
+                        <div class="search-box position-relative">
                             <input type="text" 
-                                   class="form-control search" 
-                                   placeholder="🔍 Buscar por nombre o email..."
+                                   class="form-control search ps-5" 
+                                   placeholder="Buscar por nombre o email..."
                                    id="grid-search-${this.grid.container.id}">
-                            <i class="icon ri-search-line search-icon"></i>
+                            <i class="ri-search-line search-icon position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
                         </div>
                     </div>
                     <div class="col-md-7 text-end d-flex justify-content-end align-items-center">
@@ -470,7 +470,18 @@ class GridFilters {
             const rawTerm = normalize(this.activeFilters.search);
             // const searchTokens = rawTerm.split(' ').filter(t => t.length > 0); // REMOVED TOKEN SPLITTING
 
-            const searchFields = this.config.searchFields || ['full_name', 'email'];
+            let searchFields = this.config.searchFields;
+
+            // If no search fields defined, dynamic fallback to all visible text columns
+            if (!searchFields && this.grid.config.columns) {
+                searchFields = this.grid.config.columns
+                    .filter(c => !c.hidden && (c.type === 'text' || !c.type))
+                    .map(c => c.id);
+            }
+            // Absolute fallback
+            if (!searchFields || searchFields.length === 0) {
+                searchFields = ['name', 'email', 'full_name', 'label'];
+            }
 
             filtered = filtered.filter(row => {
                 // Combine and normalize row data

@@ -35,10 +35,17 @@ async def get_clients_view(current_user: AuthUser = Depends(current_active_user)
                         "data_url": "/clients/data",
                         "primary_key": "id",
                         "columns": [
-                            {"key": "name", "label": "Nombre del Cliente", "type": "text", "sortable": True},
-                            {"key": "country_name", "label": "País", "type": "text", "sortable": True},
-                            {"key": "id", "label": "ID", "type": "text", "sortable": True, "hidden": True}
+                            {"id": "name", "label": "Nombre del Cliente", "type": "text", "sortable": True},
+                            {"id": "country_name", "label": "País", "type": "text", "sortable": True},
+                            {"id": "id", "label": "ID", "type": "text", "sortable": True, "hidden": True}
                         ],
+                        "enableFilters": True,
+                        "filterConfig": {
+                            "searchFields": ["name", "country_name"],
+                            "filterableColumns": [
+                                {"id": "country_name", "label": "País", "icon": "ri-earth-line"}
+                            ]
+                        },
                         "form_schema": [
                             {"name": "name", "label": "Nombre del Cliente", "type": "text", "required": True, "min_length": 2},
                             {
@@ -188,10 +195,10 @@ async def get_client_dashboard(client_id: UUID, current_user: AuthUser = Depends
                     "data_url": f"/contacts?client_id={client_id}",
                     "primary_key": "id",
                     "columns": [
-                        {"key": "first_name", "label": "Nombre", "type": "text", "sortable": True},
-                        {"key": "last_name", "label": "Apellido", "type": "text", "sortable": True},
-                        {"key": "position", "label": "Posición", "type": "text"},
-                        {"key": "is_active", "label": "Estado", "type": "badge", "badge_map": {"True": "success", "False": "danger"}}
+                        {"id": "first_name", "label": "Nombre", "type": "text", "sortable": True},
+                        {"id": "last_name", "label": "Apellido", "type": "text", "sortable": True},
+                        {"id": "position", "label": "Posición", "type": "text"},
+                        {"id": "is_active", "label": "Estado", "type": "badge", "badge_map": {"True": "success", "False": "danger"}}
                     ],
                     "header_actions": [
                         {

@@ -5,7 +5,7 @@
 
 import { renderContent, renderComponent } from './engine/registry.js';
 export { renderContent, renderComponent };
-import { hydrateGrids, hydrateLeadsControlGrid } from './engine/hydration.js';
+import { hydrateGrids } from './engine/hydration.js';
 import './engine/actions.js'; // Attaches handlers to window
 
 import { LinkAppShell } from '../components/layout/AppShell.js';
@@ -63,7 +63,6 @@ async function init() {
                 navigateTo(currentPath);
             } else {
                 hydrateGrids();
-                hydrateLeadsControlGrid();
             }
         }
     } catch (error) {
@@ -130,7 +129,6 @@ export async function navigateTo(href, pushState = true) {
         }
 
         hydrateGrids();
-        hydrateLeadsControlGrid();
 
         if (pushState) history.pushState(null, '', href);
         document.body.classList.remove('vertical-sidebar-enable');

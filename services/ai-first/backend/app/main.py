@@ -63,6 +63,11 @@ app.include_router(manager_workspace_router, prefix="/dashboard")
 app.include_router(seller_workspace_router, prefix="/dashboard")
 app.include_router(leads_router, prefix="/leads", tags=["Leads Operations"])
 app.include_router(campaigns_router, prefix="/campaigns", tags=["Campaigns Operations"])
+
+print("--- DEBUG: REGISTERING CLIENTS ROUTER ---")
+for route in clients_router.routes:
+    print(f"Client Route: {route.path} {route.methods}")
+
 app.include_router(clients_router, tags=["Clients"])
 app.include_router(countries_router, tags=["Countries (System)"])
 app.include_router(prompts_router, tags=["AI Prompts"])

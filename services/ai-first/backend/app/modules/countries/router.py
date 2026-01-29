@@ -35,6 +35,11 @@ async def get_countries_view():
                         {"name": "name", "label": "Country Name", "type": "text", "required": True, "min_length": 3},
                         {"name": "iso_code", "label": "ISO Code", "type": "text", "required": True, "min_length": 2, "max_length": 2}
                     ],
+                    "enableFilters": True,
+                    "filterConfig": {
+                        "searchFields": ["name", "iso_code"],
+                        "filterableColumns": []
+                    },
                     "actions": [
                         {
                             "type": "button",

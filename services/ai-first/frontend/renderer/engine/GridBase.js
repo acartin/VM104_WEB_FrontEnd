@@ -36,7 +36,7 @@ export class GridBase {
         window.gridInstances = window.gridInstances || {};
         if (this.container.id) {
             window.gridInstances[this.container.id] = this;
-            console.log(`[${this.constructor.name}] Registered instance: ${this.container.id}`);
+            // console.log(`[${this.constructor.name}] Registered instance: ${this.container.id}`);
         } else {
             console.warn(`[${this.constructor.name}] Container has no ID, cannot register instance!`);
         }
@@ -214,13 +214,13 @@ export class GridBase {
                 }
             }
         } else {
-            console.log(`[GridBase] No default action found for double click on ${rowId}`);
+            // console.log(`[GridBase] No default action found for double click on ${rowId}`);
         }
     }
 
     // Force Refresh
     async forceRender() {
-        console.log(`[${this.constructor.name}] Force rendering: ${this.container.id}`);
+        // console.log(`[${this.constructor.name}] Force rendering: ${this.container.id}`);
         await this.fetchData();
         this.applySort();
         this.render();

@@ -9,7 +9,7 @@ export function LinkModalForm(id, title, formHtml, saveActionUrl, method = 'POST
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="${id}-form" action="${saveActionUrl}" method="${method}" onsubmit="return false;">
+                    <form id="${id}-form" action="${saveActionUrl}" method="${method}" enctype="multipart/form-data" onsubmit="return false;">
                         ${formHtml}
                     </form>
                 </div>
@@ -24,11 +24,42 @@ export function LinkModalForm(id, title, formHtml, saveActionUrl, method = 'POST
 }
 
 // Helper to render a single input
-export function renderInput(label, name, value = '', type = 'text', required = false, validation = {}) {
+export function renderInput(label, name, value = '', type = 'text', required = false, validation = {}, data = {}) {
     const isRequired = required ? 'required' : '';
     const minLength = validation.min_length ? `minlength="${validation.min_length}"` : '';
     const maxLength = validation.max_length ? `maxlength="${validation.max_length}"` : '';
     const pattern = validation.pattern ? `pattern="${validation.pattern}"` : '';
+
+    // Group Field (for horizontal layouts)
+    if (type === 'group') {
+        const layout = validation.layout || 'vertical';
+        const fields = validation.fields || [];
+        const groupLabel = label || '';
+
+        const fieldsHtml = fields.map(field => {
+            // Get value from data object for each nested field
+            let fieldValue = '';
+            if (data[field.name] !== undefined && data[field.name] !== null) {
+                fieldValue = data[field.name];
+            } else if (field.value !== undefined) {
+                fieldValue = field.value;
+            }
+            return renderInput(field.label, field.name, fieldValue, field.type || 'text', field.required || false, field, data);
+        }).join('');
+
+        if (layout === 'horizontal') {
+            return `
+                <div class="mb-3">
+                    ${groupLabel ? `<label class="form-label">${groupLabel}</label>` : ''}
+                    <div class="d-flex gap-3">
+                        ${fieldsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        return `<div class="mb-3">${groupLabel ? `<label class="form-label">${groupLabel}</label>` : ''}${fieldsHtml}</div>`;
+    }
 
     // Hidden Input Optimization
     if (type === 'hidden') {
@@ -36,11 +67,12 @@ export function renderInput(label, name, value = '', type = 'text', required = f
     }
 
     if (type === 'textarea') {
+        const readonlyAttr = validation.readonly ? 'readonly' : '';
         return `
             <div class="mb-3">
                 <label for="${name}" class="form-label">${label}</label>
                 <textarea class="form-control" id="${name}" name="${name}" rows="${validation.rows || 3}" 
-                    ${isRequired} ${minLength} ${maxLength}>${value}</textarea>
+                    ${isRequired} ${minLength} ${maxLength} ${readonlyAttr}>${value}</textarea>
             </div>
         `;
     }
@@ -142,11 +174,35 @@ export function renderInput(label, name, value = '', type = 'text', required = f
         `;
     }
 
+    if (type === 'file') {
+        const helpId = `help-${name}`;
+        // Extract filename from path if value exists (e.g., /path/to/file.jpg -> file.jpg)
+        const currentFileName = value ? value.split('/').pop() : null;
+        const currentFileInfo = currentFileName
+            ? `<div class="text-muted small mb-1"><i class="ri-file-line"></i> Actual: <strong>${currentFileName}</strong></div>`
+            : '';
+
+        return `
+            <div class="mb-3">
+                <label for="${name}" class="form-label">${label}</label>
+                ${currentFileInfo}
+                <input type="file" class="form-control" id="${name}" name="${name}" 
+                    accept="${validation.accept || 'image/*'}" 
+                    ${isRequired} 
+                    onchange="if(window.validateFileSize) window.validateFileSize(this, '${helpId}')">
+                <div id="${helpId}" class="form-text mt-1">Max size: 100MB${currentFileName ? ' (dejar vacío para mantener el actual)' : ''}</div>
+            </div>
+        `;
+    }
+
+    const readonlyAttr = validation.readonly ? 'readonly' : '';
     return `
         <div class="mb-3">
             <label for="${name}" class="form-label">${label}</label>
-            <input type="${type}" class="form-control" id="${name}" name="${name}" value="${value}" 
-                ${isRequired} ${minLength} ${maxLength} ${pattern}>
+            <input type="${type}" class="form-control ${type === 'color' ? 'form-control-color' : ''}" 
+                id="${name}" name="${name}" value="${value}" 
+                style="${type === 'color' ? 'width: 50px; height: 50px; padding: 2px; aspect-ratio: 1/1;' : ''}"
+                ${isRequired} ${minLength} ${maxLength} ${pattern} ${readonlyAttr}>
         </div>
     `;
 }
@@ -170,8 +226,12 @@ export function renderFormFromSchema(schema, data = {}) {
             pattern: field.pattern,
             rows: field.rows,
             source: field.source,
-            options: field.options
+            options: field.options,
+            fields: field.fields,  // For group type
+            layout: field.layout,  // For group type
+            accept: field.accept,  // For file type
+            readonly: field.readonly // For readonly fields
         };
-        return renderInput(field.label, field.name, val, field.type, field.required, validation);
+        return renderInput(field.label, field.name, val, field.type, field.required, validation, data);
     }).join('');
 }

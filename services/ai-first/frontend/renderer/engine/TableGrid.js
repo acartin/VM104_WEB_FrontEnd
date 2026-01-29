@@ -14,23 +14,25 @@ import { formatters } from './formatters.js';
 export class TableGrid extends GridBase {
     constructor(container, config) {
         super(container, config);
-        console.log(`[TableGrid] Initializing for container: ${container.id}`);
+        // console.log(`[TableGrid] Initializing for container: ${container.id}`);
 
         // Ensure actions are parsed
         this.actions = this.config.actions || [];
-        this.schemaStr = container.dataset.schema || '[]';
+        this.headerActions = this.config.header_actions || [];
+        this.schemaStr = container.dataset.schema || '[]'; // Global/Edit schema
 
         this.init();
     }
 
     renderSkeleton() {
         this.container.innerHTML = `
-            <div class="table-grid-wrapper">
+            <div class="table-grid-wrapper" style="min-height: 500px; display: flex; flex-direction: column;">
                 <div class="d-flex justify-content-between align-items-center mb-3 grid-header-controls">
                     <!-- Filters will inject here -->
+                    <div class="grid-header-actions d-flex gap-2"></div>
                     <div id="${this.container.id}-loader" class="text-muted small ms-auto" style="display:none;">Loading...</div>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive" style="flex: 1;">
                     <table class="table table-nowrap table-hover align-middle mb-0">
                         <thead class="table-light text-muted">
                             <tr>${this.config.columns.map(c => `
@@ -53,11 +55,20 @@ export class TableGrid extends GridBase {
         `;
     }
 
+    // Called by GridBase.init()
     render() {
+        // Only render header actions here if Filters are disabled (otherwise GridFilters handles it)
+        if (!this.config.enableFilters) {
+            this.renderHeaderActions();
+        }
+
         const rows = this.getPaginatedRows();
-        console.log(`[TableGrid] Rendering ${rows.length} rows. Columns:`, this.config.columns);
-        if (rows.length > 0) console.log('[TableGrid] First Row Sample:', rows[0]);
+        // console.log(`[TableGrid] Rendering ${rows.length} rows. Columns:`, this.config.columns);
+        // ... (resto del render) ...
         const pageIcons = { asc: '↑', desc: '↓' };
+
+        // ... (renderizado de tabla) ...
+        // Re-use existing render logic but ensure renderHeaderActions calls only once ideally, or idempotent.
 
         // 1. Render Header (Update sort icons)
         const theadHtml = `
@@ -92,6 +103,44 @@ export class TableGrid extends GridBase {
         this.renderPager();
     }
 
+    renderHeaderActions() {
+        const container = this.container.querySelector('.grid-header-actions');
+        if (!container || !this.headerActions.length) return;
+
+        // Clean to avoid duplicates on re-render
+        container.innerHTML = '';
+
+        const buttons = this.headerActions.map(act => {
+            let schemaToPass = '';
+            if (act.schema) {
+                schemaToPass = (typeof act.schema === 'string') ? act.schema : safeBtoa(JSON.stringify(act.schema));
+            } else if (this.config.form_schema) {
+                schemaToPass = safeBtoa(JSON.stringify(this.config.form_schema));
+            } else if (this.schemaStr) {
+                schemaToPass = safeBtoa(this.schemaStr);
+            }
+
+            // If action is modal-form creation, url usually doesn't need ID replacement
+            const url = act.url || act.action_url || '';
+            const modalTitle = act.modal_title || act.label;
+            const color = act.color || 'primary';
+            const icon = act.icon || 'ri-add-line';
+
+            // We reuse handleEditAction but passing empty ID ('') or handled differently?
+            // Usually handleEditAction does: renderModalForm(title, schema, url, id)
+            // If id is missing, renderModalForm treats it as Create (POST).
+
+            return `
+                <button class="btn btn-${color} btn-sm waves-effect waves-light" 
+                    onclick="window.handleEditAction(event, '', '${url}', '${schemaToPass}', '${modalTitle}')">
+                    <i class="${icon} me-1 align-bottom"></i> ${act.label}
+                </button>
+            `;
+        }).join('');
+
+        container.innerHTML = buttons;
+    }
+
     renderCell(row, col) {
         let cellValue = row[col.id];
 
@@ -102,6 +151,15 @@ export class TableGrid extends GridBase {
         if (col.type === 'badge' && formatters.badge) {
             return formatters.badge(cellValue, col);
         }
+
+        // Color Swatch Renderer
+        if (col.type === 'color') {
+            return `<div class="d-flex align-items-center gap-2">
+                <div style="width: 24px; height: 24px; border-radius: 4px; background-color: ${cellValue}; border: 1px solid rgba(0,0,0,0.1);"></div>
+                <span class="text-muted small">${cellValue}</span>
+            </div>`;
+        }
+
         if (col.truncate && formatters.truncate) {
             return formatters.truncate(cellValue, col);
         }
@@ -118,25 +176,38 @@ export class TableGrid extends GridBase {
     renderActions(row) {
         const rowId = row.id; // Convention: all rows must have ID
 
+        // Helper function to replace all placeholders in URL with row values
+        const replaceUrlPlaceholders = (url) => {
+            let result = url;
+            // Replace all {fieldName} with row[fieldName]
+            Object.keys(row).forEach(key => {
+                const placeholder = `{${key}}`;
+                if (result.includes(placeholder)) {
+                    result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), row[key]);
+                }
+            });
+            return result;
+        };
+
         const dropdownItems = this.actions.map(act => {
             if (act.action === 'modal-form' || act.action === 'edit') {
                 let schemaToPass = act.schema ?
                     ((typeof act.schema === 'string') ? act.schema : safeBtoa(JSON.stringify(act.schema))) :
                     safeBtoa(this.schemaStr);
-                const url = (act.url || act.action_url || '').replace('{id}', rowId);
+                const url = replaceUrlPlaceholders(act.url || act.action_url || '');
 
                 return `<li><a class="dropdown-item" href="javascript:void(0)" onclick="window.handleEditAction(event, '${rowId}', '${url}', '${schemaToPass}')">
                     <i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}
                 </a></li>`;
             }
             if (act.action === 'navigate') {
-                const url = (act.url || act.action_url || '').replace('{id}', rowId);
+                const url = replaceUrlPlaceholders(act.url || act.action_url || '');
                 return `<li><a class="dropdown-item" href="javascript:void(0)" onclick="window.navigateTo('${url}')">
                     <i class="${act.icon} align-bottom me-2 text-muted"></i> ${act.label}
                 </a></li>`;
             }
             if ((act.action === 'api-call' && act.method === 'DELETE') || act.action === 'delete') {
-                const url = (act.url || act.action_url || '').replace('{id}', rowId);
+                const url = replaceUrlPlaceholders(act.url || act.action_url || '');
                 const msg = act.confirm_message || 'Are you sure?';
                 return `<li><a class="dropdown-item" href="javascript:void(0)" onclick="window.deleteItem(event, '${url}', '${msg}')">
                     <i class="${act.icon} align-bottom me-2 text-muted text-danger"></i> ${act.label}

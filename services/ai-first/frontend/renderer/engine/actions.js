@@ -20,14 +20,17 @@ export async function submitModalForm(event, formId, actionUrl, method = 'POST')
         return;
     }
 
+    const isMultipart = form.getAttribute('enctype') === 'multipart/form-data';
     const formData = new FormData(form);
     const payload = {};
 
+    // 1. Always build the JSON payload (in case we don't have files)
     for (const [key, value] of formData.entries()) {
+        if (value instanceof File) continue; // Skip files in the JSON payload
         payload[key] = value;
     }
 
-    // Handle checkboxes
+    // Handle checkboxes (Explicit true/false for JSON)
     const checkboxes = form.querySelectorAll('input[type="checkbox"]:not(.primary-radio)');
     checkboxes.forEach(cb => { payload[cb.name] = cb.checked; });
 
@@ -52,14 +55,27 @@ export async function submitModalForm(event, formId, actionUrl, method = 'POST')
         payload[name] = items;
     });
 
+    // 2. Decide if we MUST use multipart (only if files are present)
+    const hasFiles = form.querySelectorAll('input[type="file"]').length > 0;
+
     try {
+        const headers = {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        };
+
+        let body;
+        if (hasFiles) {
+            // Must use FormData for files
+            body = formData;
+        } else {
+            headers['Content-Type'] = 'application/json';
+            body = JSON.stringify(payload);
+        }
+
         const res = await fetch(`${API_BASE_URL}${actionUrl}`, {
             method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            },
-            body: JSON.stringify(payload)
+            headers: headers,
+            body: body
         });
 
         if (res.ok) {
@@ -81,7 +97,13 @@ export async function submitModalForm(event, formId, actionUrl, method = 'POST')
             let errorText = "Something went wrong!";
             if (res.status === 422) {
                 const errorData = await res.json();
-                errorText = errorData.detail.map(err => `<b>${err.loc[err.loc.length - 1]}:</b> ${err.msg}`).join('<br>');
+                if (Array.isArray(errorData.detail)) {
+                    errorText = errorData.detail.map(err => `<b>${err.loc[err.loc.length - 1]}:</b> ${err.msg}`).join('<br>');
+                } else if (typeof errorData.detail === 'string') {
+                    errorText = errorData.detail;
+                } else {
+                    errorText = JSON.stringify(errorData);
+                }
             }
             Swal.fire({
                 title: "Error",
@@ -205,12 +227,34 @@ export async function hydrateSelect(select) {
 /**
  * Generic Edit Handler
  */
-export async function handleEditAction(event, id, urlPattern, schemaStr) {
+export async function handleEditAction(event, id, urlPattern, schemaStr, modalTitle = "Editar registro") {
     if (event) { event.preventDefault(); event.stopPropagation(); }
-    const fetchUrl = urlPattern.replace('{id}', id);
 
     let schema = [];
-    try { schema = JSON.parse(safeAtob(schemaStr)); } catch (e) { schema = JSON.parse(schemaStr); }
+    if (!schemaStr) {
+        console.warn('handleEditAction: No schema provided');
+    } else {
+        try {
+            const decoded = safeAtob(schemaStr);
+            schema = JSON.parse(decoded || '[]');
+        } catch (e) {
+            try { schema = JSON.parse(schemaStr || '[]'); } catch (e2) {
+                console.error('handleEditAction: Failed to parse schema:', e2);
+                schema = [];
+            }
+        }
+    }
+
+    // CASE 1: CREATE (No ID)
+    if (!id) {
+        // If creating, we want fields marked as 'readonly' (like 'project') to be editable
+        const createSchema = schema.map(f => ({ ...f, readonly: false }));
+        openGenericModal(createSchema, urlPattern, 'POST', modalTitle, {});
+        return;
+    }
+
+    // CASE 2: UPDATE (With ID)
+    const fetchUrl = urlPattern.replace('{id}', id);
 
     try {
         const res = await fetch(`${API_BASE_URL}${fetchUrl}`, {
@@ -218,7 +262,7 @@ export async function handleEditAction(event, id, urlPattern, schemaStr) {
         });
         if (!res.ok) throw new Error("Fetch failed");
         const data = await res.json();
-        openGenericModal(schema, fetchUrl, 'PUT', 'Editar registro', data);
+        openGenericModal(schema, fetchUrl, 'PUT', modalTitle, data);
     } catch (e) {
         console.error('Edit Action Error:', e);
     }

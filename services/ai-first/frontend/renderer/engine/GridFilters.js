@@ -2,6 +2,8 @@
  * GridFilters - Filter management for CustomGrid
  * Handles search, column filters, and visual filter pills
  */
+import { safeBtoa } from '../../utils/base64.js';
+
 class GridFilters {
     constructor(grid) {
         this.grid = grid;
@@ -130,6 +132,9 @@ class GridFilters {
                             <i class="icon"></i> Limpiar
                         </button>
                         ` : ''}
+
+                        <!-- Header Actions (Injected via SDUI) -->
+                        ${this.renderHeaderActionsHtml()}
                     </div>
                 </div>
                 <div id="active-filters-${this.grid.container.id}" class="mt-2"></div>
@@ -146,6 +151,38 @@ class GridFilters {
 
         this.attachEvents();
         this.renderActivePills();
+    }
+
+    /**
+     * Generate HTML for Header Actions (Create Buttons)
+     */
+    renderHeaderActionsHtml() {
+        const actions = this.grid.config.header_actions || [];
+        if (actions.length === 0) return '';
+
+        return actions.map(act => {
+            let schemaToPass = '';
+            if (act.schema) {
+                schemaToPass = (typeof act.schema === 'string') ? act.schema : safeBtoa(JSON.stringify(act.schema));
+            } else if (this.grid.config.form_schema) {
+                schemaToPass = safeBtoa(JSON.stringify(this.grid.config.form_schema));
+            } else {
+                schemaToPass = safeBtoa('[]');
+            }
+
+            const url = act.url || act.action_url || '';
+            const modalTitle = act.modal_title || act.label;
+            const color = act.color || 'primary'; // Create actions usually primary
+            const icon = act.icon || 'ri-add-line';
+
+            // Add ms-2 to separate from other buttons if needed
+            return `
+                <button class="btn btn-${color} btn-sm fs-13 fw-normal ms-2 shadow-sm" 
+                    onclick="window.handleEditAction(event, '', '${url}', '${schemaToPass}', '${modalTitle}')">
+                    <i class="icon ${icon} me-1 align-bottom"></i> ${act.label}
+                </button>
+            `;
+        }).join('');
     }
 
     /**

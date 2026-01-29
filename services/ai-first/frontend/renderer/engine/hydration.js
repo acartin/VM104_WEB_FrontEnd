@@ -28,18 +28,19 @@ export async function hydrateGrids() {
         if (container.dataset.initialized) return;
         container.dataset.initialized = "true";
 
-        console.log("Hydrating LeadsGrid:", container.id);
+        // console.log("Hydrating LeadsGrid:", container.id);
 
         const config = {
             grid_id: container.dataset.gridId || 'default',
             data_url: container.dataset.url,
             columns: JSON.parse(container.dataset.columns || '[]'),
             actions: JSON.parse(container.dataset.actions || '[]'),
+            header_actions: JSON.parse(container.dataset.headerActions || '[]'),
             enableFilters: container.dataset.enableFilters === 'true',
             filterConfig: JSON.parse(container.dataset.filterConfig || '{}')
         };
 
-        console.log('[Hydration] Grid config:', config);
+        // console.log('[Hydration] Grid config:', config);
 
 
         // Initialize Engine
@@ -61,7 +62,7 @@ async function _hydrateStandardGrids(grids) {
         const gridId = container.id || `grid-${Math.random().toString(36).substr(2, 9)}`;
         container.id = gridId;
 
-        console.log(`[Hydration] Standard Grid detected: ${gridId}`);
+        // console.log(`[Hydration] Standard Grid detected: ${gridId}`);
 
         // Instantiate encapsulated engine
         const instance = new TableGrid(container, {
@@ -70,8 +71,15 @@ async function _hydrateStandardGrids(grids) {
             // StandardGrid expected these in the constructor, but TableGrid/GridBase wants them in config
             columns: JSON.parse(container.dataset.columns || '[]'),
             actions: JSON.parse(container.dataset.actions || '[]'),
+            header_actions: JSON.parse(container.dataset.headerActions || '[]'),
             enableFilters: container.dataset.enableFilters === 'true',
-            filterConfig: JSON.parse(container.dataset.filterConfig || '{}')
+            filterConfig: JSON.parse(container.dataset.filterConfig || '{}'),
+            form_schema: (() => {
+                const s = container.dataset.schema;
+                if (!s) return [];
+                try { return JSON.parse(safeAtob(s)); }
+                catch (e) { try { return JSON.parse(s); } catch (e2) { return []; } }
+            })()
         });
         window.gridInstances[gridId] = instance;
     });
@@ -81,7 +89,7 @@ async function _hydrateStandardGrids(grids) {
 
 
 export async function refreshGrids() {
-    console.log("[Hydration] Refreshing all active grids...");
+    // console.log("[Hydration] Refreshing all active grids...");
     if (!window.gridInstances) return;
 
     Object.keys(window.gridInstances).forEach(id => {

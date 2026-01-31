@@ -277,6 +277,7 @@ async def get_client_dashboard(client_id: UUID, current_user: AuthUser = Depends
                      "properties": {
                          "title": "Proyectos y Marcas",
                          "id": "branding_grid",
+                         "primary_key": "project",
                          "data_url": f"/brand-config/{client.id}/list",
                          "enableFilters": True,
                          "filterConfig": {
@@ -385,14 +386,20 @@ async def list_brand_configs(client_id: UUID, current_user: AuthUser = Depends(c
         try:
             r = await client.get(f"{BRAND_SERVICE_URL}/brand-config/{client_id}/list")
             if r.status_code == 200:
-                data = r.json()
-                # The API should return a list when all_projects=true
-                if isinstance(data, list):
-                    return data
-                # Fallback: if it returns a single object, wrap it
-                if 'project' not in data: 
-                    data['project'] = 'default'
-                return [data]
+                raw_data = r.json()
+                
+                # Desempaquetado inteligente (Compliance con esquemas RAG/List)
+                if isinstance(raw_data, dict):
+                    if "results" in raw_data: return raw_data["results"]
+                    if "data" in raw_data: return raw_data["data"]
+                    if "documents" in raw_data: return raw_data["documents"]
+                    # Si es un objeto único con los datos directamente
+                    if "project" in raw_data: return [raw_data]
+                    return []
+                
+                if isinstance(raw_data, list):
+                    return raw_data
+                return []
             elif r.status_code == 404:
                 return []
             else:

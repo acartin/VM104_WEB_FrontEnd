@@ -18,6 +18,7 @@ from app.modules.roles.router import router as roles_router
 from app.modules.contacts.router import router as contacts_router
 from app.modules.leads.router import router as leads_router
 from app.modules.campaigns.router import router as campaigns_router
+from app.modules.ai_library.router import router as ai_library_router
 from app.modules.grid_presets.router import router as grid_presets_router
 
 app = FastAPI(title="Web IAFirst Operational API")
@@ -63,6 +64,7 @@ app.include_router(manager_workspace_router, prefix="/dashboard")
 app.include_router(seller_workspace_router, prefix="/dashboard")
 app.include_router(leads_router, prefix="/leads", tags=["Leads Operations"])
 app.include_router(campaigns_router, prefix="/campaigns", tags=["Campaigns Operations"])
+app.include_router(ai_library_router, prefix="/ai-library", tags=["AI Library Management"])
 
 print("--- DEBUG: REGISTERING CLIENTS ROUTER ---")
 for route in clients_router.routes:

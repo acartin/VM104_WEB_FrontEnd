@@ -79,7 +79,8 @@ async function _hydrateStandardGrids(grids) {
                 if (!s) return [];
                 try { return JSON.parse(safeAtob(s)); }
                 catch (e) { try { return JSON.parse(s); } catch (e2) { return []; } }
-            })()
+            })(),
+            polling: container.dataset.polling
         });
         window.gridInstances[gridId] = instance;
     });

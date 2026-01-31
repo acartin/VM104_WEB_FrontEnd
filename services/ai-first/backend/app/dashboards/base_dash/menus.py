@@ -6,7 +6,10 @@ MENU_CLIENTS   = {"id": "clients", "label": "Admin Clientes", "icon": "ri-buildi
 MENU_PROMPTS   = {"id": "prompts", "label": "AI Prompts", "icon": "ri-robot-line", "link": "/prompts"}
 MENU_COUNTRIES   = {"id": "items", "label": "Paises", "icon": "ri-map-pin-line", "link": "/countries"}
 
+MENU_AI_LIBRARY = {"id": "ai-library", "label": "Biblioteca de IA", "icon": "ri-book-line", "link": "/ai-library"}
+
 # NUEVO: Mission Control (Unifica Admin + Dashboard Personal)
+
 MENU_MISSION_CONTROL = {"id": "mission-control", "label": "Home", "icon": "ri-home-4-line", "link": "/dashboard/manager"}
 
 # Dashboard solo para vendedores (Seller Workspace)
@@ -52,7 +55,8 @@ ROLE_MENUS = {
         MENU_MISSION_CONTROL, # <--- CAMBIO: Unificado
         # MENU_SELLER_WORKSPACE eliminado para no duplicar. Su data vive en Mission Control.
         {"id": "leads-me", "label": "Mis Leads", "icon": "ri-user-star-line", "link": "/leads/me"}, # INTOCABLE
-        {"id": "campaigns", "label": "Campañas", "icon": "ri-megaphone-line", "link": "/campaigns"}
+        {"id": "campaigns", "label": "Campañas", "icon": "ri-megaphone-line", "link": "/campaigns"},
+        MENU_AI_LIBRARY
     ],
     
     # 4. Client User (Coca Cola Vendedor)

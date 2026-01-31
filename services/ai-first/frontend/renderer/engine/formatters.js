@@ -72,7 +72,8 @@ export const formatters = {
         const color = (typeof cell === 'object' && cell.color) ? cell.color : (col.color || 'primary');
         const mapKey = String(label);
         const badgeColor = (col.badge_map && col.badge_map[mapKey]) ? col.badge_map[mapKey] : color;
-        return `<span class="badge bg-${badgeColor}-subtle text-${badgeColor} border border-${badgeColor}-subtle px-2 py-1">${label}</span>`;
+        const displayLabel = col.uppercase ? String(label).toUpperCase() : label;
+        return `<span class="badge bg-${badgeColor}-subtle text-${badgeColor} border border-${badgeColor}-subtle px-2 py-1">${displayLabel}</span>`;
     },
 
     /**

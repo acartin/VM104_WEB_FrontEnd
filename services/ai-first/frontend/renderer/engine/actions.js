@@ -95,15 +95,20 @@ export async function submitModalForm(event, formId, actionUrl, method = 'POST')
             });
         } else {
             let errorText = "Something went wrong!";
-            if (res.status === 422) {
+            try {
                 const errorData = await res.json();
-                if (Array.isArray(errorData.detail)) {
-                    errorText = errorData.detail.map(err => `<b>${err.loc[err.loc.length - 1]}:</b> ${err.msg}`).join('<br>');
-                } else if (typeof errorData.detail === 'string') {
+                // Extract detail message from backend (works for 409, 422, 400, etc)
+                if (typeof errorData.detail === 'string') {
                     errorText = errorData.detail;
+                } else if (Array.isArray(errorData.detail)) {
+                    // For 422 validation errors (FastAPI format)
+                    errorText = errorData.detail.map(err => `<b>${err.loc[err.loc.length - 1]}:</b> ${err.msg}`).join('<br>');
                 } else {
                     errorText = JSON.stringify(errorData);
                 }
+            } catch (e) {
+                // If JSON parsing fails, use status text
+                errorText = `Error ${res.status}: ${res.statusText}`;
             }
             Swal.fire({
                 title: "Error",

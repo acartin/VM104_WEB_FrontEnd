@@ -22,6 +22,7 @@ export class GridBase {
         this.currentPage = 1;
         this.pageSize = config.pageSize || 10;
         this.sortState = { colId: null, direction: 'asc' };
+        this.pollingInterval = null;
 
         // 1. Registry
         this.registerInstance();
@@ -51,6 +52,24 @@ export class GridBase {
 
             this.applySort();
             this.render();
+
+            // Setup Polling if enabled
+            if (this.config.polling && !this.pollingInterval) {
+                const interval = parseInt(this.config.polling);
+                if (interval > 0) {
+                    this.pollingInterval = setInterval(() => {
+                        // Solo refrescar si el elemento sigue en el DOM
+                        if (document.getElementById(this.container.id)) {
+                            this.fetchData().then(() => {
+                                this.applySort();
+                                this.render();
+                            });
+                        } else {
+                            this.stopPolling();
+                        }
+                    }, interval);
+                }
+            }
         } catch (e) {
             console.error(`[${this.constructor.name}] Init Error:`, e);
             this.container.innerHTML = `<div class="p-3 text-danger">Error initializing grid: ${e.message}</div>`;
@@ -224,6 +243,13 @@ export class GridBase {
         await this.fetchData();
         this.applySort();
         this.render();
+    }
+
+    stopPolling() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+        }
     }
 
     // ABSTRACT METHODS

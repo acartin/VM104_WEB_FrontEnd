@@ -85,6 +85,44 @@ services:
     networks:
       - web-internal
 
+  # --- NUEVO SERVICIO REALTOR CHAT (SDUI BRIDGE) ---
+
+  prd-web-realtor-bridge-01:
+    build:
+      context: ./realtor-chat/backend
+      dockerfile: Dockerfile
+    container_name: prd-web-realtor-bridge-01
+    restart: unless-stopped
+    ports:
+      - "8086:8000"
+    volumes:
+      - /srv/web/services/realtor-chat/backend:/app
+    env_file:
+      - ./realtor-chat/.env
+    depends_on:
+      - prd-web-realtor-redis-01
+    networks:
+      - web-internal
+
+  prd-web-realtor-redis-01:
+    image: redis:alpine
+    container_name: prd-web-realtor-redis-01
+    restart: unless-stopped
+    networks:
+      - web-internal
+
+  prd-web-realtor-static-01:
+    image: nginx:alpine
+    container_name: prd-web-realtor-static-01
+    restart: unless-stopped
+    ports:
+      - "8087:80"
+    volumes:
+      - /srv/web/services/realtor-chat/frontend:/usr/share/nginx/html:ro
+      - /srv/web/services/realtor-chat/frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - web-internal
+
 networks:
   web-internal:
     driver: bridge

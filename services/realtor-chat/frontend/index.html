@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hommie - Asistente Inmobiliario AI</title>
+    <!-- Premium Design System -->
+    <link rel="stylesheet" href="index.css?v=2">
+</head>
+
+<body>
+    <!-- Launcher Button -->
+    <div id="chat-launcher" onclick="toggleWidget()">
+        <svg viewBox="0 0 24 24">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+        </svg>
+    </div>
+
+    <!-- Chat Widget -->
+    <div id="chat-widget">
+        <!-- Header -->
+        <div class="widget-header">
+            <div class="brand-avatar">H</div>
+            <div class="header-info">
+                <h3>Hommie AI</h3>
+                <div class="status-indicator">
+                    <span class="dot"></span>
+                    <span>En línea</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div id="chat-messages">
+            <div class="message-wrapper bot">
+                <div class="sender-name">Hommie AI</div>
+                <div class="message-bubble">
+                    Hola! 👋 Soy Hommie, tu asistente experto. ¿En qué zona estás buscando tu próxima propiedad?
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="widget-input-area">
+            <form id="chat-form">
+                <div class="input-wrapper">
+                    <input type="text" id="user-input" placeholder="Escribe tu mensaje..." required autocomplete="off">
+                    <button type="submit" class="send-button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- UI Logic & Components -->
+    <script type="module">
+        // Manejo de Errores Global para Depuración
+        window.onerror = (msg, url, line) => {
+            alert(`Error en UI: ${msg} en ${url}:${line}`);
+        };
+
+        import { ChatRenderer } from './core/renderer.js';
+
+        // Realtor Components
+        import './components/realtor/property-card.js';
+        import './components/realtor/property-grid.js';
+        import './components/interactive/action-menu.js';
+        import './components/interactive/mortgage-calc.js';
+        import './components/media/map-widget.js';
+        import './components/media/photo-carousel.js';
+
+        const renderer = new ChatRenderer('chat-messages');
+        const form = document.getElementById('chat-form');
+        const input = document.getElementById('user-input');
+        const widget = document.getElementById('chat-widget');
+
+        // Extraction of Context from URL (FB Ads, QR Codes, etc.)
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientId = urlParams.get('clientId') || '019b4872-51f6-72d3-84c9-45183ff700d0';
+        const utmSource = urlParams.get('utm_source') || 'direct';
+        const propertyId = urlParams.get('propertyId'); // For QR codes specific to a house
+
+        // Toggle Widget
+        window.toggleWidget = () => {
+            widget.classList.toggle('active');
+            if (widget.classList.contains('active')) {
+                input.focus();
+            }
+        };
+
+        const applyBranding = (branding) => {
+            console.log("Applying branding:", branding);
+            if (!branding) return;
+            const root = document.documentElement;
+            if (branding.primary_color) root.style.setProperty('--brand-primary', branding.primary_color);
+            if (branding.secondary_color) root.style.setProperty('--brand-secondary', branding.secondary_color);
+
+            // Si el cliente tiene colores específicos, ajustamos el acento también
+            if (branding.primary_color) root.style.setProperty('--brand-accent', branding.primary_color);
+
+            if (branding.agent_name) {
+                document.querySelector('.header-info h3').innerText = branding.agent_name;
+                // Actualizar inicial del avatar
+                const initials = branding.agent_name.charAt(0).toUpperCase();
+                document.querySelector('.brand-avatar').innerText = initials;
+            }
+        };
+
+        // Initialize Branding on Load
+        (async () => {
+            try {
+                // Hacemos una petición silenciosa solo para branding
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: "",
+                        client_id: clientId,
+                        is_init: true
+                    })
+                });
+                const data = await res.json();
+                applyBranding(data.branding);
+            } catch (e) {
+                console.warn("Branding init error:", e);
+            }
+        })();
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = input.value;
+            input.value = '';
+
+            // User Message
+            renderer.renderResponse({
+                components: [{ type: 'chat', text: text, sender: 'user' }]
+            });
+
+            try {
+                renderer.showTyping();
+
+                const payload = {
+                    text: text,
+                    client_id: clientId,
+                    utm_source: utmSource,
+                    property_id: propertyId,
+                    landing_page_url: window.location.href
+                };
+
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+                const data = await response.json();
+
+                // Apply Dynamic Branding
+                applyBranding(data.branding);
+
+                renderer.hideTyping();
+                renderer.renderResponse(data);
+            } catch (err) {
+                renderer.hideTyping();
+                console.error("Error bridge:", err);
+                alert("Error de conexión: " + err.message);
+            }
+        });
+    </script>
+</body>
+
+</html>

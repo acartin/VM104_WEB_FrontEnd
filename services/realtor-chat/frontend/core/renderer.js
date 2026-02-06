@@ -6,6 +6,15 @@
 export class ChatRenderer {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
+        this.botName = "Hommie AI";
+    }
+
+    setBotName(name) {
+        if (name) this.botName = name;
+    }
+
+    scrollToBottom() {
+        this.container.scrollTop = this.container.scrollHeight;
     }
 
     renderResponse(sduiResponse) {
@@ -102,7 +111,7 @@ export class ChatRenderer {
 
         const name = document.createElement('div');
         name.className = 'sender-name';
-        name.innerText = sender === 'user' ? 'Tú' : 'Asistente Inmobiliario';
+        name.innerText = sender === 'user' ? 'Tú' : this.botName;
 
         wrapper.appendChild(name);
 

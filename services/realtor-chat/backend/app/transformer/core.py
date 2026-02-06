@@ -79,6 +79,26 @@ class SDUITransformer:
         return BrandingConfig(
             primary_color=db_brand.get("primary_color", "#4b38b3"),
             secondary_color=db_brand.get("secondary_color", "#6366f1"),
+            surface_color=db_brand.get("surface_color"),
+            text_on_primary=db_brand.get("text_on_primary", "#ffffff"),
+            text_on_secondary=db_brand.get("text_on_secondary", "#ffffff"),
+            text_on_surface=db_brand.get("text_on_surface", "#f8fafc"),
+            
+            # Fuentes
+            font_heading_name=db_brand.get("font_heading_name", "Outfit"),
+            font_heading_url=db_brand.get("font_heading_url"),
+            font_body_name=db_brand.get("font_body_name", "Inter"),
+            font_body_url=db_brand.get("font_body_url"),
+            
+            # Estética
+            border_radius=db_brand.get("border_radius", "18px"),
+            box_shadow_style=db_brand.get("box_shadow_style", "0 10px 25px rgba(0,0,0,0.1)"),
+            
+            # Logos (Base64)
+            favicon_base64=db_brand.get("favicon_base64"),
+            logo_header_base64=db_brand.get("logo_header_base64"),
+            brand_wordmark_base64=db_brand.get("brand_wordmark_base64"),
+            
             agent_name=db_brand.get("project", db_brand.get("agent_name", "Hommie AI"))
         )
 

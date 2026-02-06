@@ -17,18 +17,19 @@ export class ActionMenu extends LitElement {
             gap: 10px;
         }
         button {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
+            background: var(--brand-secondary, rgba(255, 255, 255, 0.1));
+            border: none;
+            color: var(--text-on-secondary, white);
+            padding: 8px 20px;
+            border-radius: var(--border-radius, 20px);
             cursor: pointer;
-            backdrop-filter: blur(5px);
+            font-family: var(--font-body, sans-serif);
+            font-weight: 700;
             transition: all 0.3s ease;
         }
         button:hover {
-            background: var(--accent, #4b38b3);
-            border-color: transparent;
+            filter: brightness(1.2);
+            transform: translateY(-2px);
         }
     `;
 

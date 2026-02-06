@@ -50,7 +50,26 @@ class PhotoCarousel(BaseComponent):
 class BrandingConfig(BaseModel):
     primary_color: str = "#4b38b3"
     secondary_color: str = "#6366f1"
-    logo_url: Optional[str] = None
+    surface_color: Optional[str] = None
+    text_on_primary: Optional[str] = "#ffffff"
+    text_on_secondary: Optional[str] = "#ffffff"
+    text_on_surface: Optional[str] = "#f8fafc"
+    
+    # Fuentes
+    font_heading_name: Optional[str] = "Outfit"
+    font_heading_url: Optional[str] = None
+    font_body_name: Optional[str] = "Inter"
+    font_body_url: Optional[str] = None
+    
+    # Estética
+    border_radius: Optional[str] = "18px"
+    box_shadow_style: Optional[str] = "0 10px 25px rgba(0,0,0,0.1)"
+    
+    # Logos (Base64)
+    favicon_base64: Optional[str] = None
+    logo_header_base64: Optional[str] = None
+    brand_wordmark_base64: Optional[str] = None
+    
     agent_name: str = "Hommie AI"
 
 class SDUIResponse(BaseModel):

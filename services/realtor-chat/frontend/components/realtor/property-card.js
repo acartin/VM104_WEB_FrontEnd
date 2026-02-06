@@ -14,13 +14,15 @@ class PropertyCard extends LitElement {
       margin-bottom: 1rem;
     }
     .card {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--brand-surface, rgba(255, 255, 255, 0.05));
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
+      border-radius: var(--border-radius, 16px);
       overflow: hidden;
-      color: white;
+      color: var(--text-on-surface, white);
+      box-shadow: var(--box-shadow, 0 4px 12px rgba(0,0,0,0.1));
       transition: transform 0.3s ease;
+      font-family: var(--font-body, sans-serif);
     }
     .card:hover {
       transform: translateY(-5px);
@@ -36,11 +38,12 @@ class PropertyCard extends LitElement {
     }
     h3 {
       margin: 0;
+      font-family: var(--font-heading, sans-serif);
       font-size: 1.1rem;
-      font-weight: 600;
+      font-weight: 700;
     }
     .price {
-      color: #6366f1;
+      color: var(--text-on-surface, #6366f1);
       font-size: 1.25rem;
       font-weight: 700;
       margin: 0.5rem 0;
@@ -54,7 +57,8 @@ class PropertyCard extends LitElement {
       margin-bottom: 1rem;
     }
     .badge {
-      background: #4b38b3;
+      background: var(--brand-primary, #4b38b3);
+      color: var(--text-on-primary, white);
       font-size: 0.7rem;
       padding: 4px 8px;
       border-radius: 6px;
@@ -62,20 +66,19 @@ class PropertyCard extends LitElement {
     }
     .btn-action {
       width: 100%;
-      background: rgba(99, 102, 241, 0.2);
-      border: 1px solid rgba(99, 102, 241, 0.4);
-      color: #a5b4fc;
-      padding: 10px;
-      border-radius: 10px;
-      font-weight: 600;
+      background: var(--brand-secondary, rgba(99, 102, 241, 0.2));
+      border: none;
+      color: var(--text-on-secondary, white);
+      padding: 12px;
+      border-radius: calc(var(--border-radius, 16px) / 2);
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.2s ease;
       font-size: 0.9rem;
       text-align: center;
     }
     .btn-action:hover {
-      background: rgba(99, 102, 241, 0.4);
-      color: white;
+      filter: brightness(1.2);
     }
   `;
 
